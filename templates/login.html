@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Google Fonts for premium typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <div class="form-box">
+            <div class="header">
+                <h1 id="form-title">Welcome Back</h1>
+                <p id="form-subtitle">Please enter your details to sign in.</p>
+            </div>
+
+            <!-- Tab switcher for Login / Sign Up -->
+            <div class="tab-switcher">
+                <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+                <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
+            </div>
+
+            <form action="/" method="POST" id="auth-form">
+                <input type="hidden" name="action" id="form-action" value="login">
+
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required placeholder="Enter your username">
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+                </div>
+
+                <!-- Role selection removed as users can only sign up as user. Admin is hardcoded. -->
+
+                <button type="submit" class="submit-btn" id="submit-btn">Sign In</button>
+            </form>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                <div class="alert {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            const formAction = document.getElementById('form-action');
+            const submitBtn = document.getElementById('submit-btn');
+            const title = document.getElementById('form-title');
+            const subtitle = document.getElementById('form-subtitle');
+            const tabs = document.querySelectorAll('.tab-btn');
+
+            if (tab === 'signup') {
+                formAction.value = 'signup';
+                submitBtn.textContent = 'Sign Up';
+                title.textContent = 'Create Account';
+                subtitle.textContent = 'Join us today!';
+                tabs[0].classList.remove('active');
+                tabs[1].classList.add('active');
+            } else {
+                formAction.value = 'login';
+                submitBtn.textContent = 'Sign In';
+                title.textContent = 'Welcome Back';
+                subtitle.textContent = 'Please enter your details to sign in.';
+                tabs[1].classList.remove('active');
+                tabs[0].classList.add('active');
+            }
+        }
+    </script>
+</body>
+
+</html>

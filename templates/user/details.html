@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}Complete Your Profile{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px;">
+    <div class="form-box">
+        <div class="header">
+            <h2>Complete Your Profile</h2>
+            <p>Please provide additional details to continue.</p>
+        </div>
+
+        <form action="{{ url_for('user_details') }}" method="POST" enctype="multipart/form-data">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" value="{{ username }}" readonly
+                    style="background-color: #f3f4f6;">
+            </div>
+
+            <div class="input-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required placeholder="Enter your email">
+            </div>
+
+            <div class="input-group">
+                <label for="applied_job">Job Position Applied For</label>
+                <input type="text" id="applied_job" name="applied_job" required
+                    placeholder="e.g. Python Developer, Manager">
+            </div>
+
+            <div class="input-group">
+                <label for="resume">Upload Resume (PDF/DOCX)</label>
+                <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" required
+                    style="padding-top: 5px;">
+            </div>
+
+            <button type="submit" class="submit-btn">Submit & Continue</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
