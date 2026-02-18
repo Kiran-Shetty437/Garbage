@@ -3,6 +3,59 @@ import sqlite3
 import os
 from werkzeug.utils import secure_filename
 
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import json
+
+# GLOBAL JOB ROLES LIST
+JOB_ROLES = [
+
+    # Software Development
+    "Software Engineer",
+    "Software Developer",
+    "Python Developer",
+    "Java Developer",
+    "C++ Developer",
+    "C# Developer",
+    "Javascript Developer",
+    "Full Stack Developer",
+    "Frontend Developer",
+    "Backend Developer",
+    "Web Developer",
+
+    # Data & AI
+    "Data Scientist",
+    "Data Analyst",
+    "Machine Learning Engineer",
+    "AI Engineer",
+    "Deep Learning Engineer",
+    "NLP Engineer",
+
+    # Cloud & DevOps
+    "DevOps Engineer",
+    "Cloud Engineer",
+    "AWS Engineer",
+    "Azure Engineer",
+
+    # Mobile
+    "Android Developer",
+    "iOS Developer",
+    "Flutter Developer",
+
+    # Testing
+    "QA Engineer",
+    "Software Tester",
+    "Automation Tester",
+
+    # Fresher roles
+    "Intern",
+    "Software Engineer Intern",
+    "Graduate Engineer Trainee",
+    "Trainee Engineer"
+]
+
+
 app = Flask(__name__)
 app.secret_key = 'super_secret_key'
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
@@ -41,14 +94,18 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS company (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     company_name TEXT NOT NULL,
-                    official_page_link TEXT NOT NULL
+                    official_page_link TEXT NOT NULL,
+                    image_filename TEXT,
+                    job_role TEXT,
+                    start_date TEXT,
+                    end_date TEXT
                 )''')
 
     # Migrations
     cols = {
         'user': ['email', 'resume_filename', 'applied_job'],
         'resume_data': ['full_name', 'phone', 'location', 'linkedin', 'github', 'projects', 'summary'],
-        'company': ['company_name', 'official_page_link']
+        'company': ['company_name', 'official_page_link', 'image_filename', 'job_role', 'start_date', 'end_date']
     }
     for table, columns in cols.items():
         for col in columns:
@@ -129,7 +186,112 @@ try:
 except ImportError:
     PyPDF2 = None
 
-# ... (imports) ...
+import requests
+from bs4 import BeautifulSoup
+
+def scrape_job_details(url):
+    """
+    Enhanced Scraper: Supports JSON-LD (schema.org) common in enterprise sites (Microsoft, etc.)
+    """
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        response = requests.get(url, headers=headers, timeout=15)
+        if response.status_code != 200:
+            return None, "N/A", "N/A"
+            
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        found_role = None
+        start_date = "N/A"
+        end_date = "N/A"
+
+        # 1. Try JSON-LD (Best for Microsoft, LinkedIn, Google Careers)
+        json_ld = soup.find_all('script', type='application/ld+json')
+        for script in json_ld:
+            try:
+                data = json.loads(script.string)
+                # JobPosting schema
+                if isinstance(data, dict):
+                    if data.get('@type') == 'JobPosting' or 'title' in data:
+                        found_role = data.get('title')
+                        start_date = data.get('datePosted', "N/A")
+                        # Some use validThrough for end date
+                        end_date = data.get('validThrough', "N/A")
+                        break
+                elif isinstance(data, list):
+                    for item in data:
+                        if item.get('@type') == 'JobPosting':
+                            found_role = item.get('title')
+                            start_date = item.get('datePosted', "N/A")
+                            end_date = item.get('validThrough', "N/A")
+                            break
+            except:
+                continue
+
+        # 2. Fallback to Meta Tags if JSON-LD failed
+        if not found_role:
+            meta_role = soup.find('meta', property='og:title') or \
+                       soup.find('meta', attrs={'name': 'twitter:title'})
+            if meta_role and meta_role.get('content'):
+                found_role = meta_role['content'].split('|')[0].split('-')[0].strip()
+
+        # 3. Fallback to Heuristics/Text Search
+        if not found_role:
+            text = soup.get_text(separator=' ').strip()
+            roles = JOB_ROLES
+
+            for r in roles:
+                if re.search(r'\b' + re.escape(r) + r'\b', text, re.I):
+                    found_role = r
+                    break
+        
+        # Date Cleanup
+        if start_date != "N/A":
+             # Try to format date if it looks like YYYY-MM-DD
+             match = re.search(r'\d{4}-\d{2}-\d{2}', str(start_date))
+             if match: start_date = match.group(0)
+
+        if end_date == "N/A":
+            import datetime
+            now = datetime.datetime.now()
+            start_date = now.strftime("%Y-%m-%d") if start_date == "N/A" else start_date
+            end_date = (now + datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+
+        return found_role or "General Opening", start_date, end_date
+    except Exception as e:
+        print(f"Scraping error: {e}")
+        return "Unknown Role", "N/A", "N/A"
+
+def job_matches(user_interest, job_role):
+    """
+    Improved matching logic without changing old logic structure
+    """
+
+    if not user_interest or not job_role:
+        return False
+
+    user_interest = user_interest.lower().strip()
+    job_role = job_role.lower().strip()
+
+    # exact match
+    if user_interest == job_role:
+        return True
+
+    # contains match
+    if user_interest in job_role or job_role in user_interest:
+        return True
+
+    # word match
+    user_words = user_interest.split()
+    role_words = job_role.split()
+
+    for word in user_words:
+        if word in role_words:
+            return True
+
+    return False
+
+
 
 def extract_resume_data(filepath):
     """
@@ -220,7 +382,9 @@ def user_details():
 
     if request.method == 'POST':
         email = request.form.get('email')
-        applied_job = request.form.get('applied_job')
+        # Handle multiple jobs
+        applied_jobs_list = request.form.getlist('applied_job')
+        applied_job = ", ".join([job.strip() for job in applied_jobs_list if job.strip()])
         resume_file = request.files['resume']
         
         filename = None
@@ -294,22 +458,77 @@ def admin_dashboard():
 
 @app.route('/admin/add_company', methods=['POST'])
 def add_company():
+
     if 'user_id' not in session or session.get('role') != 'admin':
         return redirect(url_for('index'))
-    
+
     company_name = request.form.get('company_name')
     official_link = request.form.get('official_link')
-    
+    image_file = request.files.get('company_image')
+
+    manual_role = request.form.get('manual_role')
+    manual_start = request.form.get('manual_start')
+    manual_end = request.form.get('manual_end')
+
+    filename = None
+
+    if image_file and image_file.filename != '':
+        filename = secure_filename(image_file.filename)
+        image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
     if company_name and official_link:
+
+        scraped_role, s_date, e_date = scrape_job_details(official_link)
+
+        final_role = manual_role if manual_role else scraped_role
+        final_start = manual_start if manual_start else s_date
+        final_end = manual_end if manual_end else e_date
+
         conn = sqlite3.connect(DB_NAME)
+        conn.row_factory = sqlite3.Row
         c = conn.cursor()
-        c.execute("INSERT INTO company (company_name, official_page_link) VALUES (?, ?)", (company_name, official_link))
+
+        c.execute('''
+            INSERT INTO company
+            (company_name, official_page_link, image_filename, job_role, start_date, end_date)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (company_name, official_link, filename, final_role, final_start, final_end))
+
         conn.commit()
+
+        # NOTIFY USERS AUTOMATICALLY
+        c.execute("SELECT username, email, applied_job FROM user WHERE role != 'admin'")
+        users = c.fetchall()
+
+        for user in users:
+
+            if not user['email'] or not user['applied_job']:
+                continue
+
+            interests = [j.strip() for j in user['applied_job'].split(",")]
+
+            for interest in interests:
+
+                if job_matches(interest, final_role):
+
+                    send_job_alert(
+                        user['email'],
+                        user['username'],
+                        company_name,
+                        final_role,
+                        official_link
+                    )
+
+                    break
+
         conn.close()
+
         flash('Company added successfully!', 'success')
+
     else:
+
         flash('Please fill in all fields.', 'error')
-        
+
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/delete_company/<int:company_id>', methods=['POST'])
@@ -385,20 +604,138 @@ def user_dashboard():
         # Fetch analyzed resume data
         c.execute("SELECT * FROM resume_data WHERE user_id = ?", (session['user_id'],))
         resume_data = c.fetchone()
+
+        # Fetch all companies
+        c.execute("SELECT * FROM company")
+        companies = c.fetchall()
         
         return render_template('user/dashboard.html', 
                                username=user['username'], 
                                email=user['email'], 
                                applied_job=user['applied_job'],
                                resume=user['resume_filename'], 
-                               analyzed_info=resume_data)
+                               analyzed_info=resume_data,
+                               companies=companies)
     finally:
         conn.close()
+
+@app.route('/admin/sync_all_jobs', methods=['POST'])
+def sync_all_jobs():
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('index'))
+    
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT id, official_page_link FROM company")
+    companies = c.fetchall()
+    
+    sync_count = 0
+    for cid, link in companies:
+        role, s_date, e_date = scrape_job_details(link)
+        if role:
+            c.execute("UPDATE company SET job_role = ?, start_date = ?, end_date = ? WHERE id = ?", 
+                      (role, s_date, e_date, cid))
+            sync_count += 1
+            
+    conn.commit()
+    conn.close()
+    flash(f'Successfully re-scraped and synced {sync_count} companies.', 'success')
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
+def send_job_alert(user_email, username, company_name, job_role, link):
+    """
+    Sends an email alert to the user using SMTP.
+    Note: You need to configure valid SMTP credentials here.
+    """
+    # SMTP Config (Example for Gmail)
+    # FOR USER: Replace these with your actual credentials or use environment variables
+    SMTP_SERVER = "smtp.gmail.com"
+    SMTP_PORT = 587
+    SENDER_EMAIL = "abc387029@gmail.com" # REPLACE THIS
+    SENDER_PASSWORD = "kaqowqwhvbcdqmdw" # REPLACE THIS
+
+    message = MIMEMultipart()
+    message["From"] = SENDER_EMAIL
+    message["To"] = user_email
+    message["Subject"] = f"Job Alert: New {job_role} opening at {company_name}!"
+
+    body = f"""
+    Hi {username},
+
+    We found a job opening that matches your interest!
+
+    Company: {company_name}
+    Role: {job_role}
+    
+    You can check more details here: {link}
+
+    Good luck with your application!
+    """
+    message.attach(MIMEText(body, "plain"))
+
+    try:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            # server.login(SENDER_EMAIL, SENDER_PASSWORD) # Uncomment and set credentials
+            # server.sendmail(SENDER_EMAIL, user_email, message.as_string())
+            print(f"DEBUG: Email alert would be sent to {user_email} for {job_role} at {company_name}")
+            return True
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        return False
+
+@app.route('/admin/notify_users', methods=['POST'])
+def notify_users():
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('index'))
+    
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    
+    c.execute("SELECT id, username, email, applied_job FROM user WHERE role != 'admin'")
+    users = c.fetchall()
+    
+    c.execute("SELECT company_name, job_role, official_page_link FROM company")
+    companies = c.fetchall()
+    
+    conn.close()
+    
+    notifications_sent = 0
+    for user in users:
+        if not user['email'] or not user['applied_job']:
+            continue
+            
+        user_interests = [j.strip().lower() for j in user['applied_job'].split(',')]
+        
+        for company in companies:
+            if not company['job_role']:
+                continue
+                
+            scraped_role = company['job_role'].lower()
+            
+            # Simple match: if scraped role contains any user interest or vice versa
+            matched = False
+            for interest in user_interests:
+                if job_matches(interest, company['job_role']):
+                    matched = True
+                    break
+            
+            if matched:
+                if send_job_alert(user['email'], user['username'], company['company_name'], company['job_role'], company['official_page_link']):
+                    notifications_sent += 1
+    
+    if notifications_sent > 0:
+        flash(f'Notifications processed! {notifications_sent} potential matches found/notified (Check console logs for simulation).', 'success')
+    else:
+        flash('No new matches found to notify.', 'info')
+        
+    return redirect(url_for('admin_dashboard'))
 
 if __name__ == '__main__':
     app.run(debug=True)

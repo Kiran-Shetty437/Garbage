@@ -22,62 +22,111 @@
         <main class="content">
             <div class="welcome-box">
                 <h1>Welcome, {{ username }}!</h1>
-                <p>Applied for: <strong>💼 {{ applied_job }}</strong></p>
+                <p>Explore recommended companies and opportunities tailored for you.</p>
+            </div>
 
-                {% if analyzed_info %}
-                <div class="profile-card"
-                    style="margin-top: 2rem; background: var(--white); padding: 2rem; border-radius: 1rem; color: var(--text-color); text-align: left; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <div class="data-row"
-                        style="margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">
-                        <h2 style="color: var(--primary-color); margin-bottom: 0.5rem;">👤 {{ analyzed_info['full_name']
-                            or username }}</h2>
-                        <p>📧 {{ email }}</p>
-                        {% if analyzed_info['phone'] %}<p>📱 {{ analyzed_info['phone'] }}</p>{% endif %}
-                        {% if analyzed_info['location'] %}<p>📍 {{ analyzed_info['location'] }}</p>{% endif %}
-                    </div>
+            <div class="company-grid" style="margin-top: 2.5rem;">
+                <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    🏢 Explore Companies
+                </h2>
 
-                    <div class="links" style="margin-bottom: 1.5rem;">
-                        {% if analyzed_info['linkedin'] %}<a href="https://{{ analyzed_info['linkedin'] }}"
-                            target="_blank" style="margin-right: 1rem; text-decoration: none; color: #0077b5;">🔗
-                            LinkedIn</a>{% endif %}
-                        {% if analyzed_info['github'] %}<a href="https://{{ analyzed_info['github'] }}" target="_blank"
-                            style="text-decoration: none; color: #333;">🔗 GitHub</a>{% endif %}
-                    </div>
-
-                    <div class="summary-section" style="margin-bottom: 1.5rem;">
-                        <h3>🧠 Profile Summary</h3>
-                        <p style="font-style: italic; color: #666;">{{ analyzed_info['summary'] or 'No summary
-                            detected.' }}</p>
-                    </div>
-
-                    <div class="grid-sections" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                        <div>
-                            <h3>🎓 Education</h3>
-                            <p style="white-space: pre-line;">{{ analyzed_info['education'] or 'None listed' }}</p>
+                {% if companies %}
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                    {% for company in companies %}
+                    <div class="company-card" style="
+                        background: white; 
+                        border-radius: 1.25rem; 
+                        overflow: hidden; 
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        border: 1px solid rgba(0,0,0,0.05);
+                        position: relative;
+                        display: flex;
+                        flex-direction: column;
+                    ">
+                        <div class="company-image-container"
+                            style="height: 160px; overflow: hidden; position: relative; background: #f8fafc;">
+                            {% if company['image_filename'] %}
+                            <img src="{{ url_for('static', filename='uploads/' + company['image_filename']) }}"
+                                alt="{{ company['company_name'] }}"
+                                style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                            <div
+                                style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); color: #64748b;">
+                                <span style="font-size: 3rem;">🏢</span>
+                            </div>
+                            {% endif %}
+                            <div
+                                style="position: absolute; bottom: 0; left: 0; right: 0; height: 50%; background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);">
+                            </div>
                         </div>
-                        <div>
-                            <h3>📄 Skills</h3>
-                            <p>{{ analyzed_info['skills'] or 'None listed' }}</p>
+
+                        <div
+                            style="padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; color: #1e293b;">{{
+                                    company['company_name'] }}</h3>
+
+                                <div class="job-scraped-info" style="
+                                    background: #f8fafc; 
+                                    padding: 1rem; 
+                                    border-radius: 0.75rem; 
+                                    margin-bottom: 1.25rem;
+                                    font-size: 0.85rem;
+                                    border: 1px solid #e2e8f0;
+                                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+                                ">
+                                    <div style="margin-bottom: 0.5rem; display: flex; align-items: start; gap: 0.5rem;">
+                                        <span style="font-size: 1.1rem;">🎯</span>
+                                        <div>
+                                            <div
+                                                style="color: #64748b; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">
+                                                Role</div>
+                                            <div style="color: #1e293b; font-weight: 600;">{{ company['job_role'] or
+                                                'Open Position' }}</div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: start; gap: 0.5rem;">
+                                        <span style="font-size: 1.1rem;">📅</span>
+                                        <div>
+                                            <div
+                                                style="color: #64748b; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">
+                                                Application Window</div>
+                                            <div style="color: #1e293b; font-weight: 600;">{{ company['start_date'] }} —
+                                                {{ company['end_date'] }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 1.5rem;">Explore this
+                                    opportunity at {{ company['company_name'] }}. Visit their official page to apply.
+                                </p>
+                            </div>
+
+                            <a href="{{ company['official_page_link'] }}" target="_blank" style="
+                                display: block; 
+                                width: 100%; 
+                                text-align: center; 
+                                padding: 0.8rem; 
+                                background: #10b981; 
+                                color: white; 
+                                text-decoration: none; 
+                                border-radius: 0.75rem; 
+                                font-weight: 600;
+                                transition: background 0.2s;
+                                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+                            " onmouseover="this.style.background='#059669'"
+                                onmouseout="this.style.background='#10b981'">
+                                Visit Website
+                            </a>
                         </div>
                     </div>
-
-                    <div class="experience-section" style="margin-top: 1.5rem;">
-                        <h3>🏢 Experience</h3>
-                        <p style="white-space: pre-line; max-height: 200px; overflow-y: auto;">{{
-                            analyzed_info['experience'] or 'None listed' }}</p>
-                    </div>
-
-                    <div class="projects-section" style="margin-top: 1.5rem;">
-                        <h3>🏗️ Projects</h3>
-                        <p style="white-space: pre-line;">{{ analyzed_info['projects'] or 'None listed' }}</p>
-                    </div>
-
-                    <div style="margin-top: 2rem; text-align: center;">
-                        <a href="{{ url_for('static', filename='uploads/' + resume) }}" target="_blank"
-                            class="btn-primary"
-                            style="text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; background: var(--primary-color); color: white;">Download
-                            Original CV</a>
-                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div
+                    style="background: white; padding: 3rem; border-radius: 1rem; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                    <p style="font-size: 1.1rem; color: #64748b;">No companies available at the moment. Check back soon!
+                    </p>
                 </div>
                 {% endif %}
             </div>

@@ -23,12 +23,55 @@
             </div>
 
             <div class="input-group">
-                <label for="applied_job">Job Position Applied For</label>
-                <input type="text" id="applied_job" name="applied_job" required
-                    placeholder="e.g. Python Developer, Manager">
+                <label>Job Positions Interested In</label>
+                <div id="job-container">
+                    <div class="job-input-wrapper" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <input type="text" name="applied_job" required placeholder="e.g. Python Developer"
+                            style="flex-grow: 1;">
+                    </div>
+                </div>
+                <button type="button" onclick="addJobField()" class="btn-secondary"
+                    style="font-size: 0.8rem; padding: 0.4rem 0.8rem; background: #e2e8f0; color: #475569; border: none; border-radius: 0.4rem; cursor: pointer; margin-top: 0.2rem;">
+                    + Add Another Job
+                </button>
             </div>
 
-            <div class="input-group">
+            <script>
+                function addJobField() {
+                    const container = document.getElementById('job-container');
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'job-input-wrapper';
+                    wrapper.style.display = 'flex';
+                    wrapper.style.gap = '0.5rem';
+                    wrapper.style.marginBottom = '0.5rem';
+
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.name = 'applied_job';
+                    input.placeholder = 'e.g. Designer';
+                    input.style.flexGrow = '1';
+                    input.required = true;
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.innerText = '✕';
+                    removeBtn.style.padding = '0.5rem';
+                    removeBtn.style.background = '#fee2e2';
+                    removeBtn.style.color = '#dc2626';
+                    removeBtn.style.border = 'none';
+                    removeBtn.style.borderRadius = '0.4rem';
+                    removeBtn.style.cursor = 'pointer';
+                    removeBtn.onclick = function () {
+                        container.removeChild(wrapper);
+                    };
+
+                    wrapper.appendChild(input);
+                    wrapper.appendChild(removeBtn);
+                    container.appendChild(wrapper);
+                }
+            </script>
+
+            <div class="input-group" style="margin-top: 1.5rem;">
                 <label for="resume">Upload Resume (PDF/DOCX)</label>
                 <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" required
                     style="padding-top: 5px;">

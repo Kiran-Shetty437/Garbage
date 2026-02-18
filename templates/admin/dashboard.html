@@ -79,7 +79,7 @@
 
             <div class="card">
                 <h2>Company Management</h2>
-                <form action="{{ url_for('add_company') }}" method="POST"
+                <form action="{{ url_for('add_company') }}" method="POST" enctype="multipart/form-data"
                     style="display: grid; gap: 1rem; margin-bottom: 2rem;">
                     <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
                         <label for="company_name">Company Name</label>
@@ -91,6 +91,26 @@
                         <input type="url" id="official_link" name="official_link" placeholder="https://example.com"
                             required style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 0.5rem;">
                     </div>
+                    <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <label for="company_image">Company Image / Logo</label>
+                        <input type="file" id="company_image" name="company_image" accept="image/*"
+                            style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 0.5rem;">
+                    </div>
+
+                    <div
+                        style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px dashed #cbd5e1; margin-top: 0.5rem;">
+                        <p style="font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 0.8rem;">Manual
+                            Overrides (If scraping fails)</p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+                            <input type="text" name="manual_role" placeholder="Manual Job Role"
+                                style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 0.4rem; font-size: 0.85rem;">
+                            <input type="text" name="manual_start" placeholder="Start Date"
+                                style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 0.4rem; font-size: 0.85rem;">
+                            <input type="text" name="manual_end" placeholder="End Date"
+                                style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 0.4rem; font-size: 0.85rem;">
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn-primary" style="padding: 1rem; cursor: pointer;">Add
                         Company</button>
                 </form>
@@ -102,12 +122,32 @@
                         {% for company in companies %}
                         <li class="list-item"
                             style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px solid #eee;">
-                            <div class="company-info">
-                                <strong style="font-size: 1.1rem; color: #333;">{{ company['company_name'] }}</strong>
-                                <a href="{{ company['official_page_link'] }}" target="_blank"
-                                    style="display: block; font-size: 0.9rem; color: #4338ca; text-decoration: none;">
-                                    Visit Official Page →
-                                </a>
+                            <div class="company-info" style="display: flex; align-items: center; gap: 1rem;">
+                                {% if company['image_filename'] %}
+                                <img src="{{ url_for('static', filename='uploads/' + company['image_filename']) }}"
+                                    alt="{{ company['company_name'] }}"
+                                    style="width: 50px; height: 50px; border-radius: 0.5rem; object-fit: cover;">
+                                {% else %}
+                                <div
+                                    style="width: 50px; height: 50px; border-radius: 0.5rem; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #999;">
+                                    No Image</div>
+                                {% endif %}
+                                <div>
+                                    <strong style="font-size: 1.1rem; color: #333;">{{ company['company_name']
+                                        }}</strong>
+                                    <div style="font-size: 0.8rem; color: #666; margin-top: 0.2rem;">
+                                        <span class="badge"
+                                            style="background: #f0fdf4; color: #166534; padding: 0.1rem 0.4rem;">🎯 {{
+                                            company['job_role'] }}</span>
+                                        <span class="badge"
+                                            style="background: #eff6ff; color: #1e40af; padding: 0.1rem 0.4rem;">📅 {{
+                                            company['start_date'] }} to {{ company['end_date'] }}</span>
+                                    </div>
+                                    <a href="{{ company['official_page_link'] }}" target="_blank"
+                                        style="display: block; font-size: 0.9rem; color: #4338ca; text-decoration: none; margin-top: 0.3rem;">
+                                        Visit Official Page →
+                                    </a>
+                                </div>
                             </div>
                             <div class="actions">
                                 <form action="{{ url_for('delete_company', company_id=company['id']) }}" method="POST"
@@ -137,6 +177,21 @@
                         <p class="stat-value">{{ companies|length }}</p>
                     </div>
                 </div>
+                <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 1rem;">
+                    <form action="{{ url_for('notify_users') }}" method="POST">
+                        <button type="submit" class="btn-primary" style="padding: 1rem 2rem; background: #4f46e5;">
+                            📢 Notify Matching Users
+                        </button>
+                    </form>
+                    <form action="{{ url_for('sync_all_jobs') }}" method="POST">
+                        <button type="submit" class="btn-primary" style="padding: 1rem 2rem; background: #0ea5e9;">
+                            🔄 Force Sync All Jobs
+                        </button>
+                    </form>
+                </div>
+                <p style="text-align: center; font-size: 0.8rem; color: #666; margin-top: 0.5rem;">
+                    Use "Sync" to re-scrape all links, then "Notify" to alert matches.
+                </p>
             </div>
         </main>
     </div>
