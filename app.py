@@ -63,6 +63,11 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 DB_NAME = 'users.db'
 
+# Adzuna API Credentials
+ADZUNA_APP_ID = "0e1073f3"
+ADZUNA_APP_KEY = "808b2c50d0ec371860f1be44c2de724d"
+
+
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -187,63 +192,43 @@ except ImportError:
     PyPDF2 = None
 
 import requests
-from bs4 import BeautifulSoup
 
-def scrape_job_details(url):
+def fetch_job_from_api(company_name):
     """
-    Enhanced Scraper: Supports JSON-LD (schema.org) common in enterprise sites (Microsoft, etc.)
+    Fetches job details using Adzuna API instead of scraping.
     """
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
-        response = requests.get(url, headers=headers, timeout=15)
-        if response.status_code != 200:
-            return None, "N/A", "N/A"
-            
-        soup = BeautifulSoup(response.text, 'html.parser')
+        # Base URL for Adzuna API (India search)
+        base_url = "https://api.adzuna.com/v1/api/jobs/in/search/1"
+        params = {
+            "app_id": ADZUNA_APP_ID,
+            "app_key": ADZUNA_APP_KEY,
+            "results_per_page": 10,
+            "what": company_name,
+            "content-type": "application/json"
+        }
         
-        found_role = None
-        start_date = "N/A"
-        end_date = "N/A"
-
-        # 1. Try JSON-LD (Best for Microsoft, LinkedIn, Google Careers)
-        json_ld = soup.find_all('script', type='application/ld+json')
-        for script in json_ld:
-            try:
-                data = json.loads(script.string)
-                # JobPosting schema
-                if isinstance(data, dict):
-                    if data.get('@type') == 'JobPosting' or 'title' in data:
-                        found_role = data.get('title')
-                        start_date = data.get('datePosted', "N/A")
-                        # Some use validThrough for end date
-                        end_date = data.get('validThrough', "N/A")
-                        break
-                elif isinstance(data, list):
-                    for item in data:
-                        if item.get('@type') == 'JobPosting':
-                            found_role = item.get('title')
-                            start_date = item.get('datePosted', "N/A")
-                            end_date = item.get('validThrough', "N/A")
-                            break
-            except:
-                continue
-
-        # 2. Fallback to Meta Tags if JSON-LD failed
-        if not found_role:
-            meta_role = soup.find('meta', property='og:title') or \
-                       soup.find('meta', attrs={'name': 'twitter:title'})
-            if meta_role and meta_role.get('content'):
-                found_role = meta_role['content'].split('|')[0].split('-')[0].strip()
-
-        # 3. Fallback to Heuristics/Text Search
-        if not found_role:
-            text = soup.get_text(separator=' ').strip()
-            roles = JOB_ROLES
-
-            for r in roles:
-                if re.search(r'\b' + re.escape(r) + r'\b', text, re.I):
-                    found_role = r
-                    break
+        response = requests.get(base_url, params=params, timeout=15)
+        if response.status_code != 200:
+            print(f"API Error: {response.status_code}")
+            return "General Opening", "N/A", "N/A"
+            
+        data = response.json()
+        jobs = data.get("results", [])
+        
+        if not jobs:
+            return "General Opening", "N/A", "N/A"
+            
+        # Try to find a job where the company name matches
+        target_job = jobs[0]
+        for job in jobs:
+            disp_name = job.get("company", {}).get("display_name", "").lower()
+            if company_name.lower() in disp_name:
+                target_job = job
+                break
+        
+        found_role = target_job.get("title", "General Opening")
+        start_date = target_job.get("created", "N/A")
         
         # Date Cleanup
         if start_date != "N/A":
@@ -251,15 +236,18 @@ def scrape_job_details(url):
              match = re.search(r'\d{4}-\d{2}-\d{2}', str(start_date))
              if match: start_date = match.group(0)
 
-        if end_date == "N/A":
-            import datetime
-            now = datetime.datetime.now()
-            start_date = now.strftime("%Y-%m-%d") if start_date == "N/A" else start_date
-            end_date = (now + datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+        import datetime
+        now = datetime.datetime.now()
+        if start_date == "N/A":
+            start_date = now.strftime("%Y-%m-%d")
+            
+        # Default end date to 30 days from now
+        end_date = (now + datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 
-        return found_role or "General Opening", start_date, end_date
+        return found_role, start_date, end_date
+        
     except Exception as e:
-        print(f"Scraping error: {e}")
+        print(f"API Fetch error: {e}")
         return "Unknown Role", "N/A", "N/A"
 
 def job_matches(user_interest, job_role):
@@ -478,7 +466,7 @@ def add_company():
 
     if company_name and official_link:
 
-        scraped_role, s_date, e_date = scrape_job_details(official_link)
+        scraped_role, s_date, e_date = fetch_job_from_api(company_name)
 
         final_role = manual_role if manual_role else scraped_role
         final_start = manual_start if manual_start else s_date
@@ -626,12 +614,12 @@ def sync_all_jobs():
     
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    c.execute("SELECT id, official_page_link FROM company")
+    c.execute("SELECT id, company_name FROM company")
     companies = c.fetchall()
     
     sync_count = 0
-    for cid, link in companies:
-        role, s_date, e_date = scrape_job_details(link)
+    for cid, company_name in companies:
+        role, s_date, e_date = fetch_job_from_api(company_name)
         if role:
             c.execute("UPDATE company SET job_role = ?, start_date = ?, end_date = ? WHERE id = ?", 
                       (role, s_date, e_date, cid))
