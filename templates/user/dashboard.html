@@ -15,7 +15,7 @@
             <div class="logo">User Portal</div>
             <div class="user-menu">
                 <span>Hello, {{ username }}</span>
-                <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn-logout">Logout</a>
             </div>
         </header>
 
@@ -64,42 +64,37 @@
                         <div
                             style="padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
                             <div>
-                                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; color: #1e293b;">{{
-                                    company['company_name'] }}</h3>
+                                <h3
+                                    style="margin: 0 0 1rem 0; font-size: 1.25rem; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem;">
+                                    {{ company['company_name'] }}
+                                </h3>
 
-                                <div class="job-scraped-info" style="
-                                    background: #f8fafc; 
-                                    padding: 1rem; 
-                                    border-radius: 0.75rem; 
-                                    margin-bottom: 1.25rem;
-                                    font-size: 0.85rem;
-                                    border: 1px solid #e2e8f0;
-                                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-                                ">
-                                    <div style="margin-bottom: 0.5rem; display: flex; align-items: start; gap: 0.5rem;">
-                                        <span style="font-size: 1.1rem;">🎯</span>
-                                        <div>
-                                            <div
-                                                style="color: #64748b; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">
-                                                Role</div>
-                                            <div style="color: #1e293b; font-weight: 600;">{{ company['job_role'] or
-                                                'Open Position' }}</div>
+                                <div class="jobs-container"
+                                    style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+                                    {% for job in company['jobs'] %}
+                                    <div class="job-scraped-info" style="
+                                        background: #f8fafc; 
+                                        padding: 0.75rem; 
+                                        border-radius: 0.75rem; 
+                                        font-size: 0.85rem;
+                                        border: 1px solid #e2e8f0;
+                                    ">
+                                        <div
+                                            style="margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                                            <span style="font-size: 1rem;">🎯</span>
+                                            <div style="color: #1e293b; font-weight: 700;">{{ job['job_role'] }}</div>
+                                        </div>
+                                        <div
+                                            style="display: flex; align-items: center; gap: 0.5rem; color: #64748b; font-size: 0.75rem; padding-left: 1.5rem; margin-top: 0.25rem;">
+                                            <span>📅 {{ job['start_date'] }} — {{ job['end_date'] }}</span>
+                                        </div>
+                                        <div
+                                            style="display: flex; align-items: center; gap: 0.5rem; color: #64748b; font-size: 0.75rem; padding-left: 1.5rem; margin-top: 0.25rem;">
+                                            <span>📍 {{ job['location'] }}</span>
                                         </div>
                                     </div>
-                                    <div style="display: flex; align-items: start; gap: 0.5rem;">
-                                        <span style="font-size: 1.1rem;">📅</span>
-                                        <div>
-                                            <div
-                                                style="color: #64748b; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">
-                                                Application Window</div>
-                                            <div style="color: #1e293b; font-weight: 600;">{{ company['start_date'] }} —
-                                                {{ company['end_date'] }}</div>
-                                        </div>
-                                    </div>
+                                    {% endfor %}
                                 </div>
-                                <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 1.5rem;">Explore this
-                                    opportunity at {{ company['company_name'] }}. Visit their official page to apply.
-                                </p>
                             </div>
 
                             <a href="{{ company['official_page_link'] }}" target="_blank" style="
