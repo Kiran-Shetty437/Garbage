@@ -3,82 +3,171 @@
 {% block title %}Complete Your Profile{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 600px;">
-    <div class="form-box">
-        <div class="header">
-            <h2>Complete Your Profile</h2>
-            <p>Please provide additional details to continue.</p>
+<!-- Internal/Inline CSS as requested -->
+<style>
+    .job-item {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        align-items: center;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .remove-job-btn {
+        background: #fee2e2;
+        color: #ef4444;
+        border: none;
+        width: 42px;
+        height: 42px;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+
+    .remove-job-btn:hover {
+        background: #fecaca;
+        transform: scale(1.05);
+    }
+</style>
+
+<div class="details-bg">
+    <div class="premium-card" style="animation: fadeIn 0.8s ease-out;">
+        <div class="form-header" style="text-align: center; margin-bottom: 2.5rem;">
+            <h2 style="font-size: 2.25rem; font-weight: 800; color: #1e293b; margin-bottom: 0.5rem;">Let's Get Started
+            </h2>
+            <p style="color: #64748b; font-size: 1.1rem;">Tell us a bit about yourself to tailor your experience.</p>
         </div>
 
         <form action="{{ url_for('user.user_details') }}" method="POST" enctype="multipart/form-data">
-            <div class="input-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" value="{{ username }}" readonly
-                    style="background-color: #f3f4f6;">
-            </div>
-
-            <div class="input-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" required placeholder="Enter your email">
-            </div>
-
-            <div class="input-group">
-                <label>Job Positions Interested In</label>
-                <div id="job-container">
-                    <div class="job-input-wrapper" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        <input type="text" name="applied_job" required placeholder="e.g. Python Developer"
-                            style="flex-grow: 1;">
+            <div class="input-section" style="margin-bottom: 2rem;">
+                <label
+                    style="display: block; font-size: 0.875rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">
+                    Your Identity
+                </label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <small style="color: #94a3b8; display: block; margin-bottom: 0.4rem;">Username</small>
+                        <input type="text" class="premium-field" value="{{ username }}" readonly
+                            style="background-color: #f8fafc; color: #64748b; cursor: not-allowed;">
+                    </div>
+                    <div>
+                        <small style="color: #94a3b8; display: block; margin-bottom: 0.4rem;">Email Address</small>
+                        <input type="email" name="email" class="premium-field" required placeholder="name@example.com">
                     </div>
                 </div>
-                <button type="button" onclick="addJobField()" class="btn-secondary"
-                    style="font-size: 0.8rem; padding: 0.4rem 0.8rem; background: #e2e8f0; color: #475569; border: none; border-radius: 0.4rem; cursor: pointer; margin-top: 0.2rem;">
-                    + Add Another Job
+            </div>
+
+            <div class="input-section" style="margin-bottom: 2rem;">
+                <label
+                    style="display: block; font-size: 0.875rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">
+                    Dream Roles
+                </label>
+                <div id="job-fields-container">
+                    <div class="job-item">
+                        <input type="text" name="applied_job" class="premium-field" required
+                            placeholder="e.g. Senior Software Engineer">
+                    </div>
+                </div>
+                <button type="button" onclick="addJob()"
+                    style="display: inline-flex; align-items: center; gap: 0.5rem; background: #f1f5f9; color: #475569; border: none; padding: 0.75rem 1.25rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem;">
+                    <span>+</span> Add Another Role
                 </button>
             </div>
 
-            <script>
-                function addJobField() {
-                    const container = document.getElementById('job-container');
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'job-input-wrapper';
-                    wrapper.style.display = 'flex';
-                    wrapper.style.gap = '0.5rem';
-                    wrapper.style.marginBottom = '0.5rem';
-
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.name = 'applied_job';
-                    input.placeholder = 'e.g. Designer';
-                    input.style.flexGrow = '1';
-                    input.required = true;
-
-                    const removeBtn = document.createElement('button');
-                    removeBtn.type = 'button';
-                    removeBtn.innerText = '✕';
-                    removeBtn.style.padding = '0.5rem';
-                    removeBtn.style.background = '#fee2e2';
-                    removeBtn.style.color = '#dc2626';
-                    removeBtn.style.border = 'none';
-                    removeBtn.style.borderRadius = '0.4rem';
-                    removeBtn.style.cursor = 'pointer';
-                    removeBtn.onclick = function () {
-                        container.removeChild(wrapper);
-                    };
-
-                    wrapper.appendChild(input);
-                    wrapper.appendChild(removeBtn);
-                    container.appendChild(wrapper);
-                }
-            </script>
-
-            <div class="input-group" style="margin-top: 1.5rem;">
-                <label for="resume">Upload Resume (PDF/DOCX)</label>
-                <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" required
-                    style="padding-top: 5px;">
+            <div class="input-section" style="margin-bottom: 2rem;">
+                <label
+                    style="display: block; font-size: 0.875rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">
+                    Your Resume
+                </label>
+                <div class="file-drop-zone" id="drop-area">
+                    <input type="file" name="resume"
+                        style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;"
+                        id="resume-input" accept=".pdf,.doc,.docx" required>
+                    <div id="upload-content"
+                        style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; pointer-events: none;">
+                        <div style="font-size: 2rem; color: #6366f1;">📄</div>
+                        <div style="font-weight: 600; color: #1e293b;">Click or drag your resume here</div>
+                        <div id="file-name" style="font-size: 0.875rem; color: #64748b;">Supports PDF, DOC, DOCX (Max
+                            10MB)</div>
+                    </div>
+                </div>
             </div>
 
-            <button type="submit" class="submit-btn">Submit & Continue</button>
+            <button type="submit" class="premium-btn">Build My Future</button>
         </form>
     </div>
 </div>
+
+<script>
+    function addJob() {
+        const container = document.getElementById('job-fields-container');
+        const div = document.createElement('div');
+        div.className = 'job-item';
+
+        div.innerHTML = `
+            <input type="text" name="applied_job" class="premium-field" required placeholder="e.g. Project Manager">
+            <button type="button" class="remove-job-btn" onclick="this.parentElement.remove()">✕</button>
+        `;
+
+        container.appendChild(div);
+        div.querySelector('input').focus();
+    }
+
+    const fileInput = document.getElementById('resume-input');
+    const fileNameDisplay = document.getElementById('file-name');
+    const dropArea = document.getElementById('drop-area');
+
+    fileInput.addEventListener('change', function (e) {
+        if (this.files && this.files[0]) {
+            fileNameDisplay.textContent = 'Selected: ' + this.files[0].name;
+            fileNameDisplay.style.color = '#10b981';
+            fileNameDisplay.style.fontWeight = '700';
+            dropArea.style.borderColor = '#10b981';
+            dropArea.style.background = '#ecfdf5';
+        }
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, () => {
+            dropArea.style.borderColor = '#6366f1';
+            dropArea.style.background = '#f5f3ff';
+        }, false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, () => {
+            if (!fileInput.files.length) {
+                dropArea.style.borderColor = '#cbd5e1';
+                dropArea.style.background = '#f8fafc';
+            }
+        }, false);
+    });
+</script>
 {% endblock %}

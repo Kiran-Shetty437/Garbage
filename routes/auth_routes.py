@@ -34,6 +34,11 @@ def login():
                 session["user_id"] = user["id"]
                 session["username"] = user["username"]
                 session["role"] = "user"
+                
+                # Check if profile is complete
+                if not user["email"] or not user["resume_filename"]:
+                    return redirect(url_for("user.user_details"))
+                
                 return redirect(url_for("user.dashboard"))
             else:
                 flash("Invalid credentials", "error")

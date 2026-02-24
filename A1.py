@@ -1,5 +1,5 @@
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # ==============================
 # ENTER YOUR ADZUNA API DETAILS
@@ -53,7 +53,7 @@ base_url = "https://api.adzuna.com/v1/api/jobs/in/search/"
 collected_jobs = []
 seen_links = set()
 
-today = datetime.utcnow()
+today = datetime.now(timezone.utc)
 
 for company in COMPANIES:
 
@@ -112,7 +112,7 @@ for company in COMPANIES:
 
             # check date
             try:
-                job_date = datetime.strptime(date_str[:10], "%Y-%m-%d")
+                job_date = datetime.strptime(date_str[:10], "%Y-%m-%d").replace(tzinfo=timezone.utc)
             except:
                 continue
 

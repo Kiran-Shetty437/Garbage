@@ -58,39 +58,56 @@ def add_company():
         return redirect(url_for("auth.login"))
 
     company_name = request.form.get("company_name")
-    official_link = request.form.get("official_link")
-    manual_role = request.form.get("manual_role")
-    manual_start = request.form.get("manual_start")
-    manual_end = request.form.get("manual_end")
+    official_page_link = request.form.get("official_page_link")
     
-    image_filename = None
-    if "company_image" in request.files:
-        file = request.files["company_image"]
-        if file and file.filename:
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(current_app.config["UPLOAD_FOLDER"], filename))
-            image_filename = filename
+    if not company_name or not official_page_link:
+        flash("Company name and official link are required", "error")
+        return redirect(url_for("admin.dashboard"))
+
+    # Fetch jobs from API automatically
+    try:
+        jobs = fetch_jobs(company_name)
+    except Exception as e:
+        print(f"Error fetching jobs: {e}")
+        jobs = []
 
     conn = get_connection()
     
-    # If manual role is provided, add it directly
-    if manual_role:
-        manual_location = request.form.get("manual_location", "Remote")
-        conn.execute(
-            "INSERT INTO company (company_name, official_page_link, image_filename, job_role, start_date, end_date, location) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (company_name, official_link, image_filename, manual_role, manual_start, manual_end, manual_location)
-        )
+    if jobs:
+        new_jobs_count = 0
+        for job in jobs:
+            # Check if job already exists to avoid duplicates
+            existing = conn.execute(
+                "SELECT id FROM company WHERE company_name = ? AND job_role = ?",
+                (company_name, job["role"])
+            ).fetchone()
+            
+            if not existing:
+                conn.execute(
+                    "INSERT INTO company (company_name, official_page_link, job_role, start_date, end_date, location) VALUES (?, ?, ?, ?, ?, ?)",
+                    (company_name, official_page_link, job["role"], "Active", "TBD", job.get("location", "Remote"))
+                )
+                new_jobs_count += 1
+        
+        if new_jobs_count > 0:
+            flash(f"Company added and {new_jobs_count} job roles synced!", "success")
+        else:
+            flash("Company added (no new job roles found)", "info")
     else:
-        # Just add the company entry without a job role if no manual role
-        conn.execute(
-            "INSERT INTO company (company_name, official_page_link, image_filename) VALUES (?, ?, ?)",
-            (company_name, official_link, image_filename)
-        )
+        # If no jobs found, at least create a company entry if it doesn't exist
+        existing_comp = conn.execute("SELECT id FROM company WHERE company_name = ?", (company_name,)).fetchone()
+        if not existing_comp:
+            conn.execute(
+                "INSERT INTO company (company_name, official_page_link) VALUES (?, ?)",
+                (company_name, official_page_link)
+            )
+            flash("Company added but no jobs found on API", "warning")
+        else:
+            flash("Company already exists and no new jobs found", "info")
         
     conn.commit()
     conn.close()
     
-    flash("Company added successfully!", "success")
     return redirect(url_for("admin.dashboard"))
 
 @admin.route("/delete-user/<int:user_id>", methods=["POST"])
@@ -123,24 +140,39 @@ def sync_all_jobs():
         return redirect(url_for("auth.login"))
         
     conn = get_connection()
+    # Fetch data and close connection immediately to avoid locking during network calls
     companies = conn.execute("SELECT DISTINCT company_name, official_page_link, image_filename FROM company").fetchall()
+    conn.close()
     
     sync_count = 0
     for comp in companies:
-        jobs = fetch_jobs(comp["company_name"])
-        for job in jobs:
-            # Check if job already exists to avoid duplicates
-            existing = conn.execute(
-                "SELECT id FROM company WHERE company_name = ? AND job_role = ?",
-                (comp["company_name"], job["role"])
-            ).fetchone()
+        try:
+            # Perform slow network request WITHOUT an open DB connection
+            jobs = fetch_jobs(comp["company_name"])
             
-            if not existing:
-                conn.execute(
-                    "INSERT INTO company (company_name, official_page_link, image_filename, job_role, start_date, end_date, location) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (comp["company_name"], comp["official_page_link"], comp["image_filename"], job["role"], "Active", "TBD", job.get("location", "Remote"))
-                )
-                sync_count += 1
+            # Open a new connection for the updates
+            conn = get_connection()
+            for job in jobs:
+                # Check if job already exists
+                existing = conn.execute(
+                    "SELECT id FROM company WHERE company_name = ? AND job_role = ?",
+                    (comp["company_name"], job["role"])
+                ).fetchone()
+                
+                if not existing:
+                    conn.execute(
+                        "INSERT INTO company (company_name, official_page_link, image_filename, job_role, start_date, end_date, location) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        (comp["company_name"], comp["official_page_link"] or job.get("link", ""), comp["image_filename"], job["role"], "Active", "TBD", job.get("location", "Remote"))
+                    )
+                    sync_count += 1
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"Error syncing {comp['company_name']}: {e}")
+            continue
+
+    flash(f"Synced {sync_count} new job roles!", "success")
+    return redirect(url_for("admin.dashboard"))
 
     
     conn.commit()

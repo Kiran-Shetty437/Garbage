@@ -78,44 +78,26 @@
             </div>
 
             <div class="card">
-                <h2>Company Management</h2>
-                <form action="{{ url_for('admin.add_company') }}" method="POST" enctype="multipart/form-data"
+                <h2>Add New Company</h2>
+                <form action="{{ url_for('admin.add_company') }}" method="POST"
                     style="display: grid; gap: 1rem; margin-bottom: 2rem;">
                     <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
                         <label for="company_name">Company Name</label>
-                        <input type="text" id="company_name" name="company_name" placeholder="Enter company name"
+                        <input type="text" id="company_name" name="company_name" placeholder="e.g. Google, Amazon, TCS"
                             required style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 0.5rem;">
                     </div>
                     <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
-                        <label for="official_link">Official Page Link</label>
-                        <input type="url" id="official_link" name="official_link" placeholder="https://example.com"
-                            required style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 0.5rem;">
-                    </div>
-                    <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
-                        <label for="company_image">Company Image / Logo</label>
-                        <input type="file" id="company_image" name="company_image" accept="image/*"
+                        <label for="official_page_link">Official Page Link</label>
+                        <input type="url" id="official_page_link" name="official_page_link"
+                            placeholder="https://example.com" required
                             style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 0.5rem;">
                     </div>
-
-                    <div
-                        style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px dashed #cbd5e1; margin-top: 0.5rem;">
-                        <p style="font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 0.8rem;">Manual
-                            Overrides (If scraping fails)</p>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.5rem;">
-                            <input type="text" name="manual_role" placeholder="Manual Job Role"
-                                style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 0.4rem; font-size: 0.85rem;">
-                            <input type="text" name="manual_start" placeholder="Start Date"
-                                style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 0.4rem; font-size: 0.85rem;">
-                            <input type="text" name="manual_end" placeholder="End Date"
-                                style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 0.4rem; font-size: 0.85rem;">
-                            <input type="text" name="manual_location" placeholder="Location"
-                                style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 0.4rem; font-size: 0.85rem;">
-                        </div>
-
-                    </div>
-
-                    <button type="submit" class="btn-primary" style="padding: 1rem; cursor: pointer;">Add
-                        Company</button>
+                    <p style="font-size: 0.85rem; color: #64748b; margin-top: -0.5rem;">
+                        Adding a company will automatically search for relevant job openings using the Adzuna API.
+                    </p>
+                    <button type="submit" class="btn-primary" style="padding: 1rem; cursor: pointer;">
+                        Search & Add Company
+                    </button>
                 </form>
 
                 <div class="company-list">
