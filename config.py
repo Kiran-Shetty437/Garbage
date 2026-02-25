@@ -1,15 +1,19 @@
 import os
+from dotenv import load_dotenv
 
-SECRET_KEY = "super_secret_key"
+# Load environment variables from .env file
+load_dotenv()
 
-DB_NAME = "users.db"
-
+SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_key")
+DB_NAME = os.getenv("DB_NAME", "users.db")
 UPLOAD_FOLDER = os.path.join("static", "uploads")
 
-ADZUNA_APP_ID = "0e1073f3"
-ADZUNA_APP_KEY = "808b2c50d0ec371860f1be44c2de724d"
+# Adzuna API Credentials
+ADZUNA_APP_ID = os.getenv("ADZUNA_APP_ID")
+ADZUNA_APP_KEY = os.getenv("ADZUNA_APP_KEY")
 
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
-SENDER_EMAIL = "abc387029@gmail.com"
-SENDER_PASSWORD = "kaqowqwhvbcdqmdw"
+# Email SMTP Configuration
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
+SENDER_EMAIL = os.getenv("SENDER_EMAIL")
+SENDER_PASSWORD = os.getenv("SENDER_PASSWORD")
