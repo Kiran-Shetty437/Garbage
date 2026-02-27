@@ -141,8 +141,18 @@
                                         </a>
                                     </div>
                                 </div>
-                                <div class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: 600;">
-                                    {{ company['jobs']|length }} Roles
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: 600;">
+                                        {{ company['jobs']|length }} Roles
+                                    </div>
+                                    <form
+                                        action="{{ url_for('admin.delete_entire_company', company_name=company['company_name']) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Delete THIS ENTIRE COMPANY and all its roles?');">
+                                        <button type="submit" class="badge error"
+                                            style="border: none; cursor: pointer; padding: 0.25rem 0.5rem; font-size: 0.75rem;">Delete
+                                            Company</button>
+                                    </form>
                                 </div>
                             </div>
 
@@ -215,6 +225,39 @@
                 <p style="text-align: center; font-size: 0.8rem; color: #666; margin-top: 0.5rem;">
                     Use "Sync" to re-scrape all links, then "Notify" to alert matches.
                 </p>
+
+                {% if notification_report %}
+                <div class="notification-report"
+                    style="margin-top: 2rem; border-top: 2px solid #eee; padding-top: 1.5rem;">
+                    <h3 style="color: #4f46e5; margin-bottom: 1rem;">Recent Notifications Sent</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left;">
+                            <thead>
+                                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                                    <th style="padding: 0.75rem;">User</th>
+                                    <th style="padding: 0.75rem;">Company</th>
+                                    <th style="padding: 0.75rem;">Job Role</th>
+                                    <th style="padding: 0.75rem;">Sent Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in notification_report %}
+                                <tr style="border-bottom: 1px solid #eee;">
+                                    <td style="padding: 0.75rem;">
+                                        <strong>{{ report.username }}</strong><br>
+                                        <span style="font-size: 0.75rem; color: #64748b;">{{ report.email }}</span>
+                                    </td>
+                                    <td style="padding: 0.75rem;">{{ report.company }}</td>
+                                    <td style="padding: 0.75rem;"><span class="badge"
+                                            style="background: #eff6ff; color: #1e40af;">{{ report.role }}</span></td>
+                                    <td style="padding: 0.75rem; color: #64748b;">{{ report.date }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </main>
     </div>

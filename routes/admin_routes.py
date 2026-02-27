@@ -36,6 +36,20 @@ def get_grouped_companies():
     
     return list(companies_dict.values())
 
+def get_all_user_roles():
+    conn = get_connection()
+    users = conn.execute("SELECT applied_job FROM user WHERE applied_job IS NOT NULL AND applied_job != ''").fetchall()
+    conn.close()
+    
+    roles = set(["software engineer", "software developer", "python developer"]) # Start with defaults
+    for user in users:
+        # Split by comma and add to set
+        parts = [p.strip().lower() for p in user["applied_job"].split(',')]
+        for p in parts:
+            if p:
+                roles.add(p)
+    return list(roles)
+
 @admin.route("/admin")
 def dashboard():
     if session.get("role") != "admin":
@@ -46,11 +60,14 @@ def dashboard():
     conn.close()
 
     companies = get_grouped_companies()
+    
+    notification_report = session.pop('last_notification_report', None)
 
     return render_template("admin/dashboard.html", 
                            username=session.get("username"),
                            users=users, 
-                           companies=companies)
+                           companies=companies,
+                           notification_report=notification_report)
 
 @admin.route("/add-company", methods=["POST"])
 def add_company():
@@ -64,9 +81,10 @@ def add_company():
         flash("Company name and official link are required", "error")
         return redirect(url_for("admin.dashboard"))
 
-    # Fetch jobs from API automatically
+    # Fetch jobs from API automatically using all roles users are interested in
     try:
-        jobs = fetch_jobs(company_name)
+        user_roles = get_all_user_roles()
+        jobs = fetch_jobs(company_name, roles=user_roles)
     except Exception as e:
         print(f"Error fetching jobs: {e}")
         jobs = []
@@ -134,6 +152,18 @@ def delete_company(company_id):
     flash("Job role deleted successfully!", "success")
     return redirect(url_for("admin.dashboard"))
 
+@admin.route("/delete-entire-company/<string:company_name>", methods=["POST"])
+def delete_entire_company(company_name):
+    if session.get("role") != "admin":
+        return redirect(url_for("auth.login"))
+        
+    conn = get_connection()
+    conn.execute("DELETE FROM company WHERE company_name = ?", (company_name,))
+    conn.commit()
+    conn.close()
+    flash(f"All records for {company_name} deleted successfully!", "success")
+    return redirect(url_for("admin.dashboard"))
+
 @admin.route("/sync-all-jobs", methods=["POST"])
 def sync_all_jobs():
     if session.get("role") != "admin":
@@ -145,10 +175,13 @@ def sync_all_jobs():
     conn.close()
     
     sync_count = 0
+    all_roles = get_all_user_roles()
+    
     for comp in companies:
         try:
             # Perform slow network request WITHOUT an open DB connection
-            jobs = fetch_jobs(comp["company_name"])
+            # Now searching for all roles users have added to their profiles
+            jobs = fetch_jobs(comp["company_name"], roles=all_roles)
             
             # Open a new connection for the updates
             conn = get_connection()
@@ -174,12 +207,6 @@ def sync_all_jobs():
     flash(f"Synced {sync_count} new job roles!", "success")
     return redirect(url_for("admin.dashboard"))
 
-    
-    conn.commit()
-    conn.close()
-    flash(f"Synced {sync_count} new job roles!", "success")
-    return redirect(url_for("admin.dashboard"))
-
 @admin.route("/notify-users", methods=["POST"])
 def notify_users():
     if session.get("role") != "admin":
@@ -189,19 +216,61 @@ def notify_users():
     users = conn.execute("SELECT * FROM user WHERE role = 'user'").fetchall()
     companies = conn.execute("SELECT * FROM company WHERE job_role IS NOT NULL").fetchall()
     
-    notified_count = 0
+    notified_users = []
+    from datetime import datetime
+    current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
+
     for user in users:
         if not user["email"] or not user["applied_job"]:
             continue
             
-        interested_job = user["applied_job"].lower()
+        interested_roles = [role.strip().lower() for role in user["applied_job"].split(',')]
+        
         for comp in companies:
-            if interested_job in comp["job_role"].lower():
+            job_role_lower = comp["job_role"].lower()
+            
+            match_found = False
+            for role in interested_roles:
+                if role in job_role_lower or job_role_lower in role:
+                    match_found = True
+                    break
+            
+            if match_found:
+                # NEW: Check if this user has already been notified about THIS specific job role
+                check = conn.execute(
+                    "SELECT id FROM notifications WHERE user_id = ? AND company_id = ?",
+                    (user["id"], comp["id"])
+                ).fetchone()
+                
+                if check:
+                    continue # Skip if already notified
+                    
                 # Send email
                 if send_job_alert(user["email"], user["username"], comp["company_name"], comp["job_role"], comp["official_page_link"]):
-                    notified_count += 1
-                    break # Only notify once for one match for now
+                    # NEW: Record that we notified them to prevent duplicates next time
+                    conn.execute(
+                        "INSERT INTO notifications (user_id, company_id) VALUES (?, ?)",
+                        (user["id"], comp["id"])
+                    )
+                    conn.commit()
+                    
+                    notified_users.append({
+                        "username": user["username"],
+                        "email": user["email"],
+                        "company": comp["company_name"],
+                        "role": comp["job_role"],
+                        "date": current_date
+                    })
+                    # break # Commenting out break to allow notifying about DIFFERENT matching roles if any
                     
     conn.close()
-    flash(f"Sent notifications to {notified_count} users!", "success")
+    
+    if notified_users:
+        import json
+        # Store the list in session temporarily to show on dashboard
+        session['last_notification_report'] = notified_users
+        flash(f"Successfully sent notifications to {len(notified_users)} users!", "success")
+    else:
+        flash("No matching users found to notify.", "info")
+        
     return redirect(url_for("admin.dashboard"))

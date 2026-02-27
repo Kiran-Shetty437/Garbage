@@ -83,9 +83,10 @@ def fetch_filtered_jobs(companies, roles, days_limit=30):
     return collected_jobs
 
 
-def fetch_jobs(company_name):
+def fetch_jobs(company_name, roles=None):
     """
-    Wrapper for fetch_filtered_jobs to match the expected signature in admin_routes.py.
+    Wrapper for fetch_filtered_jobs. If roles is None, it uses default roles.
     """
-    default_roles = ["software engineer", "software developer", "python developer"]
-    return fetch_filtered_jobs([company_name], default_roles)
+    if not roles:
+        roles = ["software engineer", "software developer", "python developer"]
+    return fetch_filtered_jobs([company_name], roles)

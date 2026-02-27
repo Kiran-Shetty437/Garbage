@@ -47,5 +47,13 @@ def init_db():
         location TEXT
     )''')
 
+    c.execute('''CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        company_id INTEGER,
+        sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, company_id)
+    )''')
+
     conn.commit()
     conn.close()
