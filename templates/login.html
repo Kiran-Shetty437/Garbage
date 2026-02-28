@@ -32,9 +32,19 @@
                     <input type="text" id="username" name="username" required placeholder="Enter your username">
                 </div>
 
+                <div class="input-group" id="email-group" style="display: none;">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email">
+                </div>
+
                 <div class="input-group">
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    <div style="text-align: right; margin-top: 5px;" id="forgot-password-link">
+                        <a href="{{ url_for('auth.forgot_password') }}"
+                            style="font-size: 0.85rem; color: var(--primary-color); text-decoration: none;">Forgot
+                            Password?</a>
+                    </div>
                 </div>
 
                 <!-- Role selection removed as users can only sign up as user. Admin is hardcoded. -->
@@ -61,6 +71,9 @@
             const title = document.getElementById('form-title');
             const subtitle = document.getElementById('form-subtitle');
             const tabs = document.querySelectorAll('.tab-btn');
+            const emailGroup = document.getElementById('email-group');
+            const emailInput = document.getElementById('email');
+            const forgotLink = document.getElementById('forgot-password-link');
 
             if (tab === 'signup') {
                 formAction.value = 'signup';
@@ -69,6 +82,13 @@
                 subtitle.textContent = 'Join us today!';
                 tabs[0].classList.remove('active');
                 tabs[1].classList.add('active');
+
+                // Show email field and make it required
+                emailGroup.style.display = 'block';
+                emailInput.required = true;
+
+                // Hide forgot password link
+                forgotLink.style.display = 'none';
             } else {
                 formAction.value = 'login';
                 submitBtn.textContent = 'Sign In';
@@ -76,6 +96,13 @@
                 subtitle.textContent = 'Please enter your details to sign in.';
                 tabs[1].classList.remove('active');
                 tabs[0].classList.add('active');
+
+                // Hide email field and remove required attribute
+                emailGroup.style.display = 'none';
+                emailInput.required = false;
+
+                // Show forgot password link
+                forgotLink.style.display = 'block';
             }
         }
     </script>

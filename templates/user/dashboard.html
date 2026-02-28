@@ -147,6 +147,122 @@
             </div>
         </main>
     </div>
+
+    <!-- Chatbot Widget -->
+    <div class="chatbot-widget">
+        <button class="chat-toggle-btn" id="chatToggle">
+            <span>💬</span>
+        </button>
+
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                <h4><span>🤖</span> Job Assistant</h4>
+                <button class="chat-close-btn" id="chatClose">✕</button>
+            </div>
+
+            <div class="chat-message-container" id="chatMessages">
+                <div class="message bot">
+                    Hello! I'm your job assistant. How can I help you with your career search today?
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Type a message...">
+                <button class="send-btn" id="sendBtn">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatToggle = document.getElementById('chatToggle');
+            const chatClose = document.getElementById('chatClose');
+            const chatWindow = document.getElementById('chatWindow');
+            const chatInput = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const chatMessages = document.getElementById('chatMessages');
+
+            // Toggle chat window
+            chatToggle.addEventListener('click', () => {
+                chatWindow.classList.add('active');
+                chatToggle.style.display = 'none';
+            });
+
+            chatClose.addEventListener('click', () => {
+                chatWindow.classList.remove('active');
+                chatToggle.style.display = 'flex';
+            });
+
+            // Send message function
+            async function sendMessage() {
+                const message = chatInput.value.trim();
+                if (!message) return;
+
+                // Add user message to UI
+                addMessage(message, 'user');
+                chatInput.value = '';
+
+                // Add typing indicator
+                const typingId = addTypingIndicator();
+
+                try {
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ message: message })
+                    });
+
+                    const data = await response.json();
+
+                    // Remove typing indicator
+                    removeTypingIndicator(typingId);
+
+                    // Add bot response
+                    addMessage(data.reply, 'bot');
+                } catch (error) {
+                    console.error('Error:', error);
+                    removeTypingIndicator(typingId);
+                    addMessage('Sorry, something went wrong. Please try again.', 'bot');
+                }
+            }
+
+            function addMessage(text, sender) {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${sender}`;
+                msgDiv.textContent = text;
+                chatMessages.appendChild(msgDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function addTypingIndicator() {
+                const id = 'typing-' + Date.now();
+                const typingDiv = document.createElement('div');
+                typingDiv.id = id;
+                typingDiv.className = 'message bot typing';
+                typingDiv.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+                chatMessages.appendChild(typingDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                return id;
+            }
+
+            function removeTypingIndicator(id) {
+                const element = document.getElementById(id);
+                if (element) element.remove();
+            }
+
+            // Event listeners
+            sendBtn.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+        });
+    </script>
 </body>
 
 </html>

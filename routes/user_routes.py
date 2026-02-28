@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, session, redirect, url_for, request, flash
+from flask import Blueprint, render_template, session, redirect, url_for, request, flash, jsonify
 from database import get_connection
 import os
 from werkzeug.utils import secure_filename
+from services.chatbot_service import job_chatbot
 
 user = Blueprint("user", __name__)
 
@@ -77,4 +78,23 @@ def user_details():
         flash("Profile updated successfully!", "success")
         return redirect(url_for("user.dashboard"))
 
-    return render_template("user/details.html", username=session.get("username"))
+    conn = get_connection()
+    user_data = conn.execute("SELECT email FROM user WHERE id=?", (session["user_id"],)).fetchone()
+    conn.close()
+
+    return render_template("user/details.html", username=session.get("username"), email=user_data["email"])
+
+
+@user.route("/chat", methods=["POST"])
+def chat():
+    if session.get("role") != "user":
+        return jsonify({"reply": "Unauthorized access."}), 403
+    
+    data = request.json
+    user_input = data.get("message")
+    
+    if not user_input:
+        return jsonify({"reply": "No input provided."}), 400
+
+    reply = job_chatbot(user_input)
+    return jsonify({"reply": reply})
