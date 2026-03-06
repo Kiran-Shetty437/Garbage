@@ -26,6 +26,35 @@ def profile():
     return render_template("user/profile.html", user=user_row, resume_data=resume_row)
 
 
+@user.route("/settings", methods=["GET", "POST"])
+def settings():
+    if session.get("role") != "user":
+        return redirect(url_for("auth.login"))
+
+    if request.method == "POST":
+        current_password = request.form.get("current_password")
+        new_password = request.form.get("new_password")
+        confirm_password = request.form.get("confirm_password")
+
+        if new_password != confirm_password:
+            flash("New passwords do not match.", "error")
+        else:
+            conn = get_connection()
+            user_row = conn.execute("SELECT password FROM user WHERE id=?", (session["user_id"],)).fetchone()
+
+            if user_row and user_row["password"] == current_password:
+                conn.execute("UPDATE user SET password=? WHERE id=?", (new_password, session["user_id"]))
+                conn.commit()
+                flash("Password updated successfully!", "success")
+            else:
+                flash("Incorrect current password.", "error")
+            conn.close()
+
+    return render_template("user/settings.html", username=session.get("username"))
+
+
+
+
 @user.route("/user")
 @user.route("/user/dashboard")
 def dashboard():
@@ -112,27 +141,6 @@ def user_details():
     return render_template("user/details.html", username=session.get("username"), email=user_data["email"])
 
 
-@user.route("/settings", methods=["GET", "POST"])
-def settings():
-    if session.get("role") != "user":
-        return redirect(url_for("auth.login"))
-
-    if request.method == "POST":
-        current_password = request.form.get("current_password")
-        new_password = request.form.get("new_password")
-
-        conn = get_connection()
-        user_row = conn.execute("SELECT password FROM user WHERE id=?", (session["user_id"],)).fetchone()
-
-        if user_row and user_row["password"] == current_password:
-            conn.execute("UPDATE user SET password=? WHERE id=?", (new_password, session["user_id"]))
-            conn.commit()
-            flash("Password updated successfully!", "success")
-        else:
-            flash("Incorrect current password.", "error")
-        conn.close()
-
-    return render_template("user/settings.html", username=session.get("username"))
 
 
 @user.route("/chat", methods=["POST"])

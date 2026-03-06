@@ -90,7 +90,34 @@ def dashboard():
         return redirect(url_for("auth.login"))
 
     conn = get_connection()
-    users = conn.execute("SELECT * FROM user WHERE role = 'user'").fetchall()
+    users = conn.execute("SELECT * FROM user WHERE role = 'user' ORDER BY created_at DESC").fetchall()
+    
+    # Fetch global settings
+    ratio_row = conn.execute("SELECT value FROM global_settings WHERE key = 'commission_ratio'").fetchone()
+    commission_ratio = ratio_row["value"] if ratio_row else "10.0"
+    
+    # Calculate some stats for the dashboard
+    total_users = len(users)
+    active_today = conn.execute("SELECT COUNT(*) as count FROM user WHERE role = 'user' AND created_at >= date('now')").fetchone()["count"]
+    
+    # Real data for General View Chart (Last 10 days)
+    chart_data = conn.execute("""
+        SELECT date(created_at) as join_date, COUNT(*) as count 
+        FROM user 
+        WHERE role = 'user' 
+        GROUP BY join_date 
+        ORDER BY join_date DESC 
+        LIMIT 10
+    """).fetchall()
+    
+    chart_labels = [row["join_date"] for row in reversed(chart_data)]
+    chart_values = [row["count"] for row in reversed(chart_data)]
+    
+    # Ensure at least some data for visual consistency if empty
+    if not chart_labels:
+        chart_labels = ["No Data"]
+        chart_values = [0]
+    
     conn.close()
 
     companies = get_grouped_companies()
@@ -101,7 +128,27 @@ def dashboard():
                            username=session.get("username"),
                            users=users, 
                            companies=companies,
+                           commission_ratio=commission_ratio,
+                           total_users=total_users,
+                           active_today=active_today,
+                           chart_labels=chart_labels,
+                           chart_values=chart_values,
                            notification_report=notification_report)
+
+@admin.route("/update-ratio", methods=["POST"])
+def update_ratio():
+    if session.get("role") != "admin":
+        return redirect(url_for("auth.login"))
+    
+    new_ratio = request.form.get("ratio")
+    if new_ratio:
+        conn = get_connection()
+        conn.execute("INSERT OR REPLACE INTO global_settings (key, value) VALUES ('commission_ratio', ?)", (new_ratio,))
+        conn.commit()
+        conn.close()
+        flash("Commission ratio updated successfully!", "success")
+    
+    return redirect(url_for("admin.dashboard"))
 
 @admin.route("/add-company", methods=["POST"])
 def add_company():

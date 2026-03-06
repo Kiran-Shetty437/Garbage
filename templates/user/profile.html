@@ -1,250 +1,104 @@
 {% extends "layout.html" %}
 
-{% block title %}My Profile{% endblock %}
-
-{% block chatbot %}{% endblock %}
+{% block title %}CareerConnect - User Profile{% endblock %}
 
 {% block content %}
-<style>
-    .profile-bg {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f1f5f9;
-        padding: 2rem;
-    }
+<div class="dashboard-container">
+    <header class="top-nav">
+        <div class="logo">
+            <div
+                style="width: 35px; height: 35px; background: var(--primary-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 1.2rem;">
+                C</div>
+            <span style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-left: 10px;">CareerConnect</span>
+        </div>
+        <div class="profile-container">
+            <a href="{{ url_for('user.dashboard') }}"
+                style="text-decoration: none; color: var(--primary-color); font-weight: 600; display: flex; align-items: center; gap: 5px;">
+                <span>←</span> Back to Dashboard
+            </a>
+        </div>
+    </header>
 
-    .premium-card {
-        background: white;
-        width: 100%;
-        max-width: 800px;
-        padding: 3rem;
-        border-radius: 1.5rem;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
-    }
-
-    .profile-header {
-        display: flex;
-        align-items: center;
-        gap: 2rem;
-        margin-bottom: 3rem;
-        padding-bottom: 2rem;
-        border-bottom: 2px solid #f1f5f9;
-    }
-
-    .profile-avatar {
-        width: 100px;
-        height: 100px;
-        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-        border-radius: 2rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 3rem;
-        color: white;
-        font-weight: 700;
-        box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
-    }
-
-    .info-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 2rem;
-        margin-bottom: 2.5rem;
-    }
-
-    .info-item label {
-        display: block;
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: #94a3b8;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-bottom: 0.5rem;
-    }
-
-    .info-item .value {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #1e293b;
-    }
-
-    .resume-preview {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 1rem;
-        padding: 2rem;
-        margin-top: 2rem;
-    }
-
-    .tag-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 0.5rem;
-    }
-
-    .tag {
-        background: #eef2ff;
-        color: #4338ca;
-        padding: 0.4rem 1rem;
-        border-radius: 2rem;
-        font-size: 0.85rem;
-        font-weight: 600;
-        border: 1px solid #e0e7ff;
-    }
-
-    .section-title {
-        font-size: 1.25rem;
-        font-weight: 800;
-        color: #1e293b;
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .btn-row {
-        display: flex;
-        gap: 1rem;
-        margin-top: 3rem;
-    }
-
-    .action-btn {
-        flex: 1;
-        padding: 1rem;
-        border-radius: 0.75rem;
-        font-weight: 700;
-        text-align: center;
-        text-decoration: none;
-        transition: all 0.3s;
-        cursor: pointer;
-    }
-
-    .btn-edit {
-        background: #6366f1;
-        color: white;
-    }
-
-    .btn-edit:hover {
-        background: #4f46e5;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px rgba(99, 102, 241, 0.2);
-    }
-
-    .btn-back {
-        background: #f1f5f9;
-        color: #475569;
-    }
-
-    .btn-back:hover {
-        background: #e2e8f0;
-    }
-</style>
-
-<div class="profile-bg">
-    <div class="premium-card">
-        <div class="profile-header">
-            <div class="profile-avatar">
-                {{ user['username'][0] | upper }}
-            </div>
-            <div>
-                <h1 style="font-size: 2.25rem; font-weight: 800; color: #1e293b; margin: 0;">{{ user['username'] }}</h1>
-                <p style="color: #64748b; font-size: 1.1rem; margin: 0.25rem 0 0 0;">{{ user['email'] }}</p>
-            </div>
+    <main class="content" style="max-width: 800px; margin: 0 auto;">
+        <div class="welcome-box" style="margin-bottom: 2rem; border-left: 5px solid var(--primary-color);">
+            <h1 style="font-size: 2rem;">User Profile</h1>
+            <p>Your professional identity on CareerConnect.</p>
         </div>
 
-        <div class="info-grid">
-            <div class="info-item">
-                <label>Username</label>
-                <div class="value">{{ user['username'] }}</div>
-            </div>
-            <div class="info-item">
-                <label>Email Address</label>
-                <div class="value">{{ user['email'] }}</div>
-            </div>
-        </div>
+        <div class="grid-container" style="grid-template-columns: 1fr;">
+            <!-- Profile Info Card -->
+            <div class="card" style="padding: 2.5rem; margin-bottom: 2rem;">
+                <div
+                    style="display: flex; align-items: center; gap: 2rem; margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #f1f5f9;">
+                    <div
+                        style="width: 100px; height: 100px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--primary-color); border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                        {{ (user['username'] or 'U')[0] | upper }}
+                    </div>
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.75rem;">{{ user['username'] }}</h2>
+                        <span class="badge success" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">Active
+                            Candidate</span>
+                    </div>
+                </div>
 
-        <div class="info-section">
-            <h3 class="section-title"><span>🎯</span> Interested Roles</h3>
-            <div class="tag-container">
-                {% if user['applied_job'] %}
-                {% for job in user['applied_job'].split(',') %}
-                <span class="tag">{{ job.strip() }}</span>
-                {% endfor %}
-                {% else %}
-                <span style="color: #94a3b8;">No roles specified</span>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="resume-preview">
-            <h3 class="section-title"><span>📄</span> Resume Extraction</h3>
-            {% if resume_data %}
-            <div class="info-grid" style="margin-bottom: 1.5rem;">
-                <div class="info-item">
-                    <label>Full Name</label>
-                    <div class="value">{{ resume_data['full_name'] or 'Not extracted' }}</div>
-                </div>
-                <div class="info-item">
-                    <label>Phone</label>
-                    <div class="value">{{ resume_data['phone'] or 'Not extracted' }}</div>
-                </div>
-                <div class="info-item">
-                    <label>Location</label>
-                    <div class="value">{{ resume_data['location'] or 'Not extracted' }}</div>
-                </div>
-                <div class="info-item">
-                    <label>LinkedIn</label>
-                    <div class="value">
-                        {% if resume_data['linkedin'] %}
-                        <a href="{{ resume_data['linkedin'] }}" target="_blank" style="color: #6366f1;">View Profile</a>
-                        {% else %}
-                        Not specified
-                        {% endif %}
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div>
+                        <h4
+                            style="color: #64748b; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                            Email Address</h4>
+                        <p style="font-size: 1.1rem; font-weight: 600; color: #1e293b;">{{ user['email'] or 'Not
+                            provided' }}</p>
+                    </div>
+                    <div>
+                        <h4
+                            style="color: #64748b; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                            Member Since</h4>
+                        <p style="font-size: 1.1rem; font-weight: 600; color: #1e293b;">{{ user['created_at'] or
+                            'Recent' }}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="info-item" style="margin-bottom: 1.5rem;">
-                <label>Skills</label>
-                <div class="tag-container">
-                    {% for skill in (resume_data['skills'] or '').split(',') %}
-                    {% if skill.strip() %}
-                    <span class="tag" style="background: #f0fdf4; color: #166534; border-color: #dcfce7;">{{
-                        skill.strip() }}</span>
+            <!-- Resume & Jobs Card -->
+            <div class="card" style="padding: 2.5rem;">
+                <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.5rem;">📄</span> Professional Data
+                </h3>
+
+                <div
+                    style="background: #f8fafc; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #f1f5f9;">
+                    <h4 style="margin-bottom: 1rem; color: #475569;">Target Job Roles</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                        {% if user['applied_job'] %}
+                        {% for job in user['applied_job'].split(',') %}
+                        <span
+                            style="background: white; border: 1px solid #e2e8f0; padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 0.9rem; font-weight: 600; color: #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            {{ job.strip() }}
+                        </span>
+                        {% endfor %}
+                        {% else %}
+                        <p style="color: #94a3b8; font-style: italic;">No job roles specified yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div
+                    style="background: #f8fafc; border-radius: 1rem; padding: 1.5rem; border: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <h4 style="margin-bottom: 0.25rem; color: #475569;">Resume File</h4>
+                        <p style="font-size: 0.9rem; color: #64748b;">
+                            {{ user['resume_filename'] or 'No resume uploaded' }}
+                        </p>
+                    </div>
+                    {% if user['resume_filename'] %}
+                    <a href="{{ url_for('static', filename='uploads/' + user['resume_filename']) }}" target="_blank"
+                        style="background: var(--primary-color); color: white; text-decoration: none; padding: 0.6rem 1.2rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;">
+                        View File
+                    </a>
                     {% endif %}
-                    {% endfor %}
                 </div>
             </div>
-
-            <div class="info-item">
-                <label>Professional Summary</label>
-                <div class="value" style="font-weight: 400; line-height: 1.6; color: #475569; font-style: italic;">
-                    "{{ resume_data['summary'] or 'No summary available' }}"
-                </div>
-            </div>
-            {% else %}
-            <div style="text-align: center; color: #64748b; padding: 1rem;">
-                <p>No resume detailed data found. Please re-upload your resume in settings if needed.</p>
-            </div>
-            {% endif %}
-
-            <div style="margin-top: 1.5rem; text-align: right;">
-                {% if user['resume_filename'] %}
-                <a href="{{ url_for('static', filename='uploads/' + user['resume_filename']) }}" target="_blank"
-                    style="font-size: 0.9rem; color: #6366f1; font-weight: 700; text-decoration: none;">
-                    Download Original Resume (PDF) →
-                </a>
-                {% endif %}
-            </div>
         </div>
-
-        <div class="btn-row">
-            <a href="{{ url_for('user.dashboard') }}" class="action-btn btn-back">Return Home</a>
-            <a href="{{ url_for('user.user_details') }}" class="action-btn btn-edit">Update Details</a>
-        </div>
-    </div>
+    </main>
 </div>
 {% endblock %}

@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, session, url_for, flash
 from database import get_connection
 import random
+import time
 from services.email_service import send_otp_email
 
 auth = Blueprint("auth", __name__)
@@ -34,6 +35,7 @@ def login():
                 session["user_id"] = user["id"]
                 session["username"] = user["username"]
                 session["role"] = "user"
+                session["login_time"] = time.time()
                 
                 # Check if profile is complete
                 if not user["email"] or not user["resume_filename"]:
@@ -130,10 +132,18 @@ def reset_password():
         return redirect(url_for("auth.login"))
 
 
-
 @auth.route("/logout")
 def logout():
+    user_id = session.get("user_id")
+    login_time = session.get("login_time")
+    
+    if user_id and login_time:
+        # Calculate session duration in minutes (at least 1 minute if they logged in)
+        duration = int((time.time() - login_time) / 60) + 1
+        conn = get_connection()
+        conn.execute("UPDATE user SET total_screen_time = total_screen_time + ? WHERE id = ?", (duration, user_id))
+        conn.commit()
+        conn.close()
 
     session.clear()
-
     return redirect(url_for("auth.login"))

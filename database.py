@@ -18,8 +18,30 @@ def init_db():
         role TEXT,
         email TEXT,
         resume_filename TEXT,
-        applied_job TEXT
+        applied_job TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        total_screen_time INTEGER DEFAULT 0
     )''')
+
+    try:
+        # Note: SQLite 3 cannot use CURRENT_TIMESTAMP as a default when using ALTER TABLE.
+        # Fixed by using a constant string as the default.
+        c.execute("ALTER TABLE user ADD COLUMN created_at TIMESTAMP DEFAULT '2024-01-01 00:00:00'")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        c.execute("ALTER TABLE user ADD COLUMN total_screen_time INTEGER DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
+
+    c.execute('''CREATE TABLE IF NOT EXISTS global_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT
+    )''')
+
+    # Default ratio value
+    c.execute("INSERT OR IGNORE INTO global_settings (key, value) VALUES ('commission_ratio', '10.0')")
 
     c.execute('''CREATE TABLE IF NOT EXISTS resume_data (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

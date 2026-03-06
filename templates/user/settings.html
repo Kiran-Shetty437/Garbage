@@ -1,64 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "layout.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - Change Password</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
+{% block title %}CareerConnect - Account Settings{% endblock %}
 
-<body class="user-theme">
-    <div class="dashboard-container">
-        <header class="top-nav" style="justify-content: flex-start;">
+{% block content %}
+<div class="dashboard-container">
+    <header class="top-nav">
+        <div class="logo">
+            <div
+                style="width: 35px; height: 35px; background: var(--primary-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 1.2rem;">
+                C</div>
+            <span style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-left: 10px;">CareerConnect</span>
+        </div>
+        <div class="profile-container">
             <a href="{{ url_for('user.dashboard') }}"
-                style="text-decoration: none; color: var(--primary-color); font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                style="text-decoration: none; color: var(--primary-color); font-weight: 600; display: flex; align-items: center; gap: 5px;">
                 <span>←</span> Back to Dashboard
             </a>
-        </header>
+        </div>
+    </header>
 
-        <main class="content" style="display: flex; justify-content: center; align-items: center; min-height: 60vh;">
-            <div class="card interactive" style="max-width: 500px; width: 100%; padding: 3rem; cursor: default;">
-                <div style="text-align: center; margin-bottom: 2rem;">
-                    <h1 style="font-size: 2rem; margin-bottom: 0.5rem; color: #1e293b;">Settings</h1>
-                    <p style="color: #64748b;">Update your account security preferences.</p>
+    <main class="content" style="max-width: 600px; margin: 0 auto;">
+        <div class="welcome-box" style="margin-bottom: 2.5rem; border-left: 5px solid var(--accent-color);">
+            <h1 style="font-size: 2.25rem;">Account settings</h1>
+            <p>Manage your account security and preferences.</p>
+        </div>
+
+        <div class="card"
+            style="padding: 2.5rem; border-radius: 1.5rem; box-shadow: 0 10px 40px -12px rgba(0,0,0,0.1);">
+            <h3 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 12px; font-size: 1.5rem;">
+                <span style="font-size: 1.5rem;">🔐</span> Change Password
+            </h3>
+
+            <form action="{{ url_for('user.settings') }}" method="POST"
+                style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <div class="input-group" style="margin-bottom: 0;">
+                    <label style="font-size: 0.95rem; font-weight: 700; color: #475569; margin-bottom: 0.5rem;">Current
+                        Password</label>
+                    <input type="password" name="current_password" class="premium-field" required placeholder="••••••••"
+                        style="padding: 0.9rem 1.25rem; width: 100%; box-sizing: border-box;">
                 </div>
 
-                <form action="{{ url_for('user.settings') }}" method="POST">
-                    <div class="input-group" style="margin-bottom: 1.5rem;">
-                        <label for="current_password" style="font-weight: 600; color: #475569;">Current Password</label>
-                        <input type="password" id="current_password" name="current_password" required
-                            placeholder="Enter existing password"
-                            style="width: 100%; padding: 0.85rem; border: 1px solid #e2e8f0; border-radius: 0.75rem;">
-                    </div>
-
-                    <div class="input-group" style="margin-bottom: 2rem;">
-                        <label for="new_password" style="font-weight: 600; color: #475569;">New Password</label>
-                        <input type="password" id="new_password" name="new_password" required
-                            placeholder="Enter new password"
-                            style="width: 100%; padding: 0.85rem; border: 1px solid #e2e8f0; border-radius: 0.75rem;">
-                    </div>
-
-                    <button type="submit" class="submit-btn"
-                        style="width: 100%; padding: 1rem; background: var(--primary-color); border-radius: 0.75rem; font-weight: 700; transition: transform 0.2s;">
-                        Update Password
-                    </button>
-                </form>
-
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                <div class="flash-messages" style="margin-top: 1.5rem;">
-                    {% for category, message in messages %}
-                    <div class="alert {{ category }}" style="text-align: center; border-radius: 0.75rem;">{{ message }}
-                    </div>
-                    {% endfor %}
+                <div class="input-group" style="margin-bottom: 0;">
+                    <label style="font-size: 0.95rem; font-weight: 700; color: #475569; margin-bottom: 0.5rem;">New
+                        Password</label>
+                    <input type="password" name="new_password" class="premium-field" required placeholder="••••••••"
+                        style="padding: 0.9rem 1.25rem; width: 100%; box-sizing: border-box;">
                 </div>
-                {% endif %}
-                {% endwith %}
-            </div>
-        </main>
-    </div>
-</body>
 
-</html>
+                <div class="input-group" style="margin-bottom: 0;">
+                    <label style="font-size: 0.95rem; font-weight: 700; color: #475569; margin-bottom: 0.5rem;">Confirm
+                        New Password</label>
+                    <input type="password" name="confirm_password" class="premium-field" required placeholder="••••••••"
+                        style="padding: 0.9rem 1.25rem; width: 100%; box-sizing: border-box;">
+                </div>
+
+                <button type="submit" class="premium-btn"
+                    style="background: var(--primary-color); color: white; border: none; padding: 1rem; border-radius: 0.75rem; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: all 0.3s; margin-top: 1rem;">
+                    Update Password
+                </button>
+            </form>
+        </div>
+
+        <div style="margin-top: 3rem; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 2rem;">
+            <p style="color: #64748b; font-size: 0.95rem;">Need to delete your account? Please contact <a
+                    href="mailto:support@careerconnect.com"
+                    style="color: #ef4444; font-weight: 600; text-decoration: none;">support</a>.</p>
+        </div>
+    </main>
+</div>
+
+<style>
+    .premium-field {
+        width: 100%;
+        padding: 0.85rem 1.25rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        font-family: inherit;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.3s;
+    }
+
+    .premium-field:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    .premium-btn:hover {
+        background: #1d4ed8;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+    }
+</style>
+{% endblock %}

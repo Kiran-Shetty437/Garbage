@@ -8,21 +8,24 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 
 def job_chatbot(user_input):
     prompt = f"""
-You are a job assistant chatbot.
+You are a job assistant chatbot. Your goal is to provide helpful, structured, and easy-to-read information about jobs, companies, and careers.
 
 Rules:
-- If greeting → reply greeting
-- If job related → answer properly
+- If greeting → reply greeting politely.
+- If job related → provide a detailed answer in a structured way (using bullet points, bold headers, and clear sections).
 - If NOT job related → reply EXACTLY:
-Sorry, I answer only job related questions.
+  Sorry, I answer only job related questions.
 
 User: {user_input}
 """
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-flash", 
+            model="gemini-3-flash-preview", 
             contents=prompt
         )
         return response.text
     except Exception as e:
+        error_msg = str(e).upper()
+        if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg or "QUOTA" in error_msg:
+            return "⚠️ **Service is busy.** The AI has reached its free limit. Please try again in about 60 seconds."
         return f"Error connecting to chatbot: {str(e)}"

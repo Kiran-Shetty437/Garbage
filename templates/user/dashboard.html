@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Dashboard</title>
+    <title>CareerConnect - User Portal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -12,6 +12,13 @@
 <body>
     <div class="dashboard-container user-theme">
         <header class="top-nav">
+            <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+                <div
+                    style="width: 35px; height: 35px; background: var(--primary-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 1.2rem;">
+                    C
+                </div>
+                <span style="font-size: 1.25rem; font-weight: 700; color: #1e293b;">CareerConnect</span>
+            </div>
             <div class="profile-container">
                 <div class="profile-trigger" id="profileTrigger">
                     <span class="profile-initials">{{ (username or 'User')[0] | upper }}</span>
@@ -297,14 +304,63 @@
                 } catch (error) {
                     console.error('Error:', error);
                     removeTypingIndicator(typingId);
-                    addMessage('Sorry, something went wrong. Please try again.', 'bot');
+                    addMessage('⚠️ **Unable to connect.** The server might be down or your connection was interrupted. Please check your internet and try again.', 'bot');
                 }
+            }
+
+            function formatMessage(text) {
+                if (!text) return '';
+
+                // Initial escape to prevent XSS (basic)
+                let formatted = text
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;");
+
+                // Restore our intended tags after escaping
+                const restore = (str) => str.replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+
+                // Handle headers (### Header)
+                formatted = formatted.replace(/^### (.*$)/gm, '#####$1#####');
+                formatted = formatted.replace(/^## (.*$)/gm, '####$1####');
+
+                // Handle bold text
+                formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                // Handle horizontal rules (---)
+                formatted = formatted.replace(/^---$/gm, '<hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 1rem 0;">');
+
+                // Handle bullet points at start of line
+                formatted = formatted.replace(/^\s*[-*]\s+(.*)/gm, '<div class="bullet-point" style="display: flex; gap: 0.5rem; margin-bottom: 0.25rem;"><span style="color: #6366f1;">•</span><span>$1</span></div>');
+
+                // Handle bullets in middle of line
+                formatted = formatted.replace(/ \*\s+(.*?)/g, '<br><div class="bullet-point" style="display: flex; gap: 0.5rem; margin-bottom: 0.25rem;"><span style="color: #6366f1;">•</span><span>$1</span></div>');
+
+                // Handle symbols
+                formatted = formatted.replace(/📌/g, '<br><strong style="color: #10b981; font-size: 1.1rem;">📌</strong>');
+                formatted = formatted.replace(/⚠️/g, '<strong>⚠️</strong>');
+
+                // Handle line breaks
+                formatted = formatted.replace(/\n\n/g, '<br><br>');
+                formatted = formatted.replace(/\n/g, '<br>');
+
+                // Restore headers with proper tags
+                formatted = formatted.replace(/#####(.*?)#####/g, '<h5 style="margin: 1rem 0 0.5rem 0; color: #1e293b; font-weight: 700;">$1</h5>');
+                formatted = formatted.replace(/####(.*?)####/g, '<h4 style="margin: 1.2rem 0 0.6rem 0; color: #1e293b; font-weight: 800;">$1</h4>');
+
+                // Cleanup: remove <br> immediately following or preceding a block element
+                formatted = formatted.replace(/<br><div/g, '<div');
+                formatted = formatted.replace(/<\/div><br>/g, '</div>');
+                formatted = formatted.replace(/<\/h4><br>/g, '</h4>');
+                formatted = formatted.replace(/<\/h5><br>/g, '</h5>');
+
+                return formatted;
             }
 
             function addMessage(text, sender) {
                 const msgDiv = document.createElement('div');
                 msgDiv.className = `message ${sender}`;
-                msgDiv.textContent = text;
+                msgDiv.innerHTML = formatMessage(text);
                 chatMessages.appendChild(msgDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
@@ -392,14 +448,8 @@
 
                     if (response.ok) {
                         analysisResult.style.display = 'block';
-                        // Format the markdown-like result for display
-                        let formattedResult = data.result
-                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                            .replace(/^\s*[-*]\s+(.*)/gm, '<li style="margin-left: 1.5rem; margin-bottom: 0.5rem;">$1</li>')
-                            .replace(/\n\n/g, '<br><br>')
-                            .replace(/\n/g, '<br>')
-                            .replace(/📌/g, '<br><strong style="color: #10b981; font-size: 1.1rem;">📌</strong>')
-                            .replace(/⚠️/g, '<strong>⚠️</strong>');
+                        // Use unified formatting function
+                        let formattedResult = formatMessage(data.result);
 
                         analysisResult.innerHTML = `
                             <div class="analysis-report" style="text-align: left; background: #fff; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0;">

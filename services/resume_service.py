@@ -74,12 +74,12 @@ def analyze_resume(text):
     """
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3-flash-preview",
             contents=prompt
         )
         return response.text
     except Exception as e:
-        error_msg = str(e)
-        if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
-            return "⚠️ Quota exceeded for the AI model. Please try again after a few minutes or check your API key's billing settings."
-        return f"Error analyzing resume: {error_msg}"
+        error_msg = str(e).upper()
+        if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg or "QUOTA" in error_msg:
+            return "⚠️ **Service is busy.** The AI analyzer has reached its free limit. Please wait about 60 seconds and try your analysis again."
+        return f"Error analyzing resume: {str(e)}"
