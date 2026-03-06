@@ -59,8 +59,12 @@
 
             <div class="sidebar-footer">
                 <div class="theme-toggle">
-                    <button class="btn-toggle"><i class="fas fa-sun"></i> Light</button>
-                    <button class="btn-toggle active"><i class="fas fa-moon"></i> Dark</button>
+                    <button class="btn-toggle" id="mode-light" onclick="setTheme('light')">
+                        <i class="fas fa-sun"></i> Light
+                    </button>
+                    <button class="btn-toggle active" id="mode-dark" onclick="setTheme('dark')">
+                        <i class="fas fa-moon"></i> Dark
+                    </button>
                 </div>
             </div>
         </aside>
@@ -442,6 +446,34 @@
                         }
                     }
                 });
+            }
+        });
+
+        // Theme toggle logic
+        function setTheme(theme) {
+            const body = document.body;
+            const btnLight = document.getElementById('mode-light');
+            const btnDark = document.getElementById('mode-dark');
+
+            if (theme === 'light') {
+                body.classList.add('light-mode');
+                btnLight.classList.add('active');
+                btnDark.classList.remove('active');
+            } else {
+                body.classList.remove('light-mode');
+                btnDark.classList.add('active');
+                btnLight.classList.remove('active');
+            }
+
+            // Persistence
+            localStorage.setItem('admin-theme', theme);
+        }
+
+        // Initialize theme on load
+        document.addEventListener('DOMContentLoaded', function () {
+            const savedTheme = localStorage.getItem('admin-theme');
+            if (savedTheme) {
+                setTheme(savedTheme);
             }
         });
 

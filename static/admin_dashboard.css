@@ -13,6 +13,59 @@
     --glass-border: rgba(255, 255, 255, 0.1);
 }
 
+.light-mode {
+    --bg-dark: #f8fafc;
+    --sidebar-bg: #ffffff;
+    --card-bg: #ffffff;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --glass-border: rgba(0, 0, 0, 0.05);
+}
+
+.light-mode .glass-card {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.light-mode .search-input {
+    background: #ffffff;
+    color: #1e293b;
+    border-color: #e2e8f0;
+}
+
+.light-mode .top-bar {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: #e2e8f0;
+}
+
+.light-mode .sub-stat-box {
+    background: #f1f5f9;
+}
+
+.light-mode .progress-bar-bg {
+    background: #e2e8f0;
+}
+
+.light-mode .theme-toggle {
+    background: #f1f5f9;
+}
+
+.light-mode td {
+    border-top-color: #f1f5f9;
+}
+
+.light-mode .view-switch-container {
+    background: #f1f5f9;
+}
+
+.light-mode .view-btn:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+.light-mode .breadcrumb b {
+    color: var(--text-primary);
+}
+
 body {
     margin: 0;
     font-family: 'Outfit', sans-serif;
