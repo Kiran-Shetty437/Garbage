@@ -71,6 +71,31 @@
             background: #6449e6;
         }
 
+        /* Delete button in template inventory */
+        .btn-delete-template {
+            background: rgba(255, 118, 117, 0.12);
+            border: 1px solid rgba(255, 118, 117, 0.3);
+            color: #ff7675;
+            border-radius: 8px;
+            padding: 0.35rem 0.6rem;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-delete-template:hover {
+            background: rgba(255, 118, 117, 0.28);
+            transform: scale(1.1);
+        }
+
+        .action-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .loading-spinner {
             display: none;
             width: 16px;
@@ -198,17 +223,29 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <form action="{{ url_for('admin.toggle_template', template_id=template['id']) }}"
-                                        method="POST" style="display: inline;">
-                                        <button type="submit" class="btn-icon"
-                                            title="{{ 'Deactivate' if template['is_active'] else 'Activate' }}">
-                                            {% if template['is_active'] %}
-                                            <i class="fas fa-times" style="color: #ff7675;"></i>
-                                            {% else %}
-                                            <i class="fas fa-check" style="color: #55efc4;"></i>
-                                            {% endif %}
-                                        </button>
-                                    </form>
+                                    <div class="action-cell">
+                                        <form
+                                            action="{{ url_for('admin.toggle_template', template_id=template['id']) }}"
+                                            method="POST" style="display: inline;">
+                                            <button type="submit" class="btn-icon"
+                                                title="{{ 'Deactivate' if template['is_active'] else 'Activate' }}">
+                                                {% if template['is_active'] %}
+                                                <i class="fas fa-times" style="color: #ff7675;"></i>
+                                                {% else %}
+                                                <i class="fas fa-check" style="color: #55efc4;"></i>
+                                                {% endif %}
+                                            </button>
+                                        </form>
+                                        <form
+                                            action="{{ url_for('admin.delete_resume_template', template_id=template['id']) }}"
+                                            method="POST" style="display: inline;"
+                                            data-name="{{ template['template_name'] }}"
+                                            onsubmit="return confirmDeleteTemplate(this);">
+                                            <button type="submit" class="btn-delete-template" title="Delete Template">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -328,6 +365,12 @@
                 submitBtn.disabled = true;
                 submitBtn.innerText = 'Extracting data...';
             });
+        }
+
+        // Confirm before deleting a template
+        function confirmDeleteTemplate(formEl) {
+            const name = formEl.getAttribute('data-name') || 'this template';
+            return confirm('Are you sure you want to permanently delete "' + name + '"? This cannot be undone.');
         }
     </script>
 </body>

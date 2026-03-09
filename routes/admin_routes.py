@@ -425,6 +425,19 @@ def toggle_template(template_id):
     conn.close()
     flash("Template status updated!", "success")
     return redirect(url_for("admin.resume_templates"))
+
+@admin.route("/admin/delete-template/<int:template_id>", methods=["POST"])
+def delete_resume_template(template_id):
+    if session.get("role") != "admin":
+        return redirect(url_for("auth.login"))
+        
+    conn = get_connection()
+    conn.execute("DELETE FROM resume_templates WHERE id = ?", (template_id,))
+    conn.commit()
+    conn.close()
+    flash("Template deleted successfully!", "success")
+    return redirect(url_for("admin.resume_templates"))
+
 @admin.route("/admin/analyze-resume-image", methods=["POST"])
 def analyze_resume_image_route():
     if session.get("role") != "admin":
