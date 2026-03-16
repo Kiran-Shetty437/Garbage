@@ -57,7 +57,7 @@
             <section id="template-selection" class="screen active">
                 <div class="screen-header">
                     <h1>Choose Your Professional Palette</h1>
-                    <p>Select from 6 premium, industry-tested templates designed to get you hired.</p>
+                    <p>Select from 5 premium, industry-tested templates designed to get you hired.</p>
                 </div>
 
                 <div class="template-grid" id="dynamic-template-grid">
@@ -66,7 +66,7 @@
                         <div class="template-mini-preview" id="preview-{{ template.templateId }}"></div>
                         <div class="template-info">
                             <h3>{{ template.name }}</h3>
-                            <p>{{ template.demo.personal.summary | truncate(80) }}</p>
+                            <p>{{ template.demo.get('personal', {}).get('summary', '') | truncate(80) }}</p>
                             <button class="btn btn-primary select-template">Select {{ template.name.split(' ')[0]
                                 }}</button>
                         </div>
@@ -80,8 +80,11 @@
                     {% endif %}
                 </div>
 
+                <script id="templates-data" type="application/json">
+                    {{ dynamic_templates | tojson | safe }}
+                </script>
                 <script>
-                    window.DYNAMIC_TEMPLATES = {{ dynamic_templates | tojson | safe }};
+                    window.DYNAMIC_TEMPLATES = JSON.parse(document.getElementById('templates-data').textContent || '[]');
                 </script>
             </section>
 
