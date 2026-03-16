@@ -30,7 +30,7 @@
             </div>
 
             <!-- Tab switcher for Login / Sign Up -->
-            <div class="tab-switcher">
+            <div class="tab-switcher" id="tab-switcher">
                 <button class="tab-btn active" onclick="switchTab('login')">Login</button>
                 <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
             </div>
@@ -38,29 +38,56 @@
             <form action="/" method="POST" id="auth-form">
                 <input type="hidden" name="action" id="form-action" value="login">
 
-                <div class="input-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required placeholder="Enter your username">
-                </div>
+                <div id="login-signup-fields">
+                    <div class="input-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" placeholder="Enter your username">
+                    </div>
 
-                <div class="input-group" id="email-group" style="display: none;">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" placeholder="Enter your email">
-                </div>
+                    <div class="input-group" id="email-group" style="display: none;">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="Enter your email">
+                    </div>
 
-                <div class="input-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Enter your password">
-                    <div style="text-align: right; margin-top: 5px;" id="forgot-password-link">
-                        <a href="{{ url_for('auth.forgot_password') }}"
-                            style="font-size: 0.85rem; color: var(--primary-color); text-decoration: none;">Forgot
-                            Password?</a>
+                    <div class="input-group" id="password-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="Enter your password">
+                        <div style="text-align: right; margin-top: 5px;" id="forgot-password-link">
+                            <a href="javascript:void(0)" onclick="switchTab('forgot')"
+                                style="font-size: 0.85rem; color: var(--primary-color); text-decoration: none;">Forgot
+                                Password?</a>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Role selection removed as users can only sign up as user. Admin is hardcoded. -->
+                <div id="forgot-fields" style="display: none;">
+                    <div class="input-group">
+                        <label for="forgot-email">Email Address</label>
+                        <input type="email" id="forgot-email" name="forgot_email" placeholder="Enter your registered email">
+                    </div>
+                </div>
+
+                <div id="verify-fields" style="display: none;">
+                    <div class="input-group">
+                        <label for="otp">OTP Code</label>
+                        <input type="text" id="otp" name="otp" placeholder="6-digit code" maxlength="6"
+                            style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;">
+                    </div>
+                </div>
+
+                <div id="reset-fields" style="display: none;">
+                    <div class="input-group">
+                        <label for="new-password">New Password</label>
+                        <input type="password" id="new-password" name="new_password" placeholder="Enter new password">
+                    </div>
+                </div>
 
                 <button type="submit" class="submit-btn" id="submit-btn">Sign In</button>
+
+                <div id="back-to-login" style="display: none; text-align: center; margin-top: 1rem;">
+                    <a href="javascript:void(0)" onclick="switchTab('login')"
+                        style="color: #6b7280; text-decoration: none; font-size: 0.9rem;">Back to Login</a>
+                </div>
             </form>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -77,45 +104,128 @@
 
     <script>
         function switchTab(tab) {
+            const form = document.getElementById('auth-form');
             const formAction = document.getElementById('form-action');
             const submitBtn = document.getElementById('submit-btn');
             const title = document.getElementById('form-title');
             const subtitle = document.getElementById('form-subtitle');
             const tabs = document.querySelectorAll('.tab-btn');
+            const tabSwitcher = document.getElementById('tab-switcher');
+            
+            const loginSignupFields = document.getElementById('login-signup-fields');
+            const forgotFields = document.getElementById('forgot-fields');
             const emailGroup = document.getElementById('email-group');
+            const backToLogin = document.getElementById('back-to-login');
+            
+            // Inputs
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
             const emailInput = document.getElementById('email');
-            const forgotLink = document.getElementById('forgot-password-link');
+            const forgotEmailInput = document.getElementById('forgot-email');
 
             if (tab === 'signup') {
+                form.action = "{{ url_for('auth.login') }}";
                 formAction.value = 'signup';
                 submitBtn.textContent = 'Sign Up';
                 title.textContent = 'Create Account';
                 subtitle.textContent = 'Join us today!';
                 tabs[0].classList.remove('active');
                 tabs[1].classList.add('active');
-
-                // Show email field and make it required
+                tabSwitcher.style.display = 'flex';
+                loginSignupFields.style.display = 'block';
+                forgotFields.style.display = 'none';
                 emailGroup.style.display = 'block';
+                backToLogin.style.display = 'none';
+                
+                usernameInput.required = true;
+                passwordInput.required = true;
                 emailInput.required = true;
-
-                // Hide forgot password link
-                forgotLink.style.display = 'none';
+                emailInput.name = "email"; // Ensure normal email field has correct name
+                forgotEmailInput.required = false;
+                forgotEmailInput.name = "forgot_email"; // Reset forgot field name
+            } else if (tab === 'forgot') {
+                form.action = "{{ url_for('auth.forgot_password') }}";
+                formAction.value = 'forgot';
+                submitBtn.textContent = 'Send OTP';
+                title.textContent = 'Forgot Password';
+                subtitle.textContent = 'Enter your email to receive an OTP.';
+                tabSwitcher.style.display = 'none';
+                loginSignupFields.style.display = 'none';
+                forgotFields.style.display = 'block';
+                backToLogin.style.display = 'block';
+                
+                usernameInput.required = false;
+                passwordInput.required = false;
+                emailInput.required = false;
+                emailInput.name = "hidden_email"; // Prevent clash with forgot email field
+                forgotEmailInput.required = true;
+                forgotEmailInput.name = "email"; // Ensure forgot field has the name backend expects
+            } else if (tab === 'verify') {
+                form.action = "{{ url_for('auth.verify_otp') }}";
+                formAction.value = 'verify';
+                submitBtn.textContent = 'Verify OTP';
+                submitBtn.style.backgroundColor = '#10b981';
+                title.textContent = 'Verify OTP';
+                subtitle.textContent = 'Please enter the 6-digit code sent to your email.';
+                tabSwitcher.style.display = 'none';
+                loginSignupFields.style.display = 'none';
+                forgotFields.style.display = 'none';
+                document.getElementById('verify-fields').style.display = 'block';
+                document.getElementById('reset-fields').style.display = 'none';
+                backToLogin.style.display = 'block';
+                
+                usernameInput.required = false;
+                passwordInput.required = false;
+                emailInput.required = false;
+                document.getElementById('otp').required = true;
+            } else if (tab === 'reset') {
+                form.action = "{{ url_for('auth.reset_password') }}";
+                formAction.value = 'reset';
+                submitBtn.textContent = 'Update Password';
+                submitBtn.style.backgroundColor = 'var(--primary-color)';
+                title.textContent = 'Reset Password';
+                subtitle.textContent = 'Enter your new password below.';
+                tabSwitcher.style.display = 'none';
+                loginSignupFields.style.display = 'none';
+                forgotFields.style.display = 'none';
+                document.getElementById('verify-fields').style.display = 'none';
+                document.getElementById('reset-fields').style.display = 'block';
+                backToLogin.style.display = 'block';
+                
+                usernameInput.required = false;
+                passwordInput.required = false;
+                emailInput.required = false;
+                document.getElementById('new-password').required = true;
+                document.getElementById('new-password').name = "password"; // Match backend expectation
             } else {
+                form.action = "{{ url_for('auth.login') }}";
                 formAction.value = 'login';
                 submitBtn.textContent = 'Sign In';
+                submitBtn.style.backgroundColor = '';
                 title.textContent = 'Welcome Back';
                 subtitle.textContent = 'Please enter your details to sign in.';
                 tabs[1].classList.remove('active');
                 tabs[0].classList.add('active');
-
-                // Hide email field and remove required attribute
+                tabSwitcher.style.display = 'flex';
+                loginSignupFields.style.display = 'block';
+                forgotFields.style.display = 'none';
+                document.getElementById('verify-fields').style.display = 'none';
+                document.getElementById('reset-fields').style.display = 'none';
                 emailGroup.style.display = 'none';
+                backToLogin.style.display = 'none';
+                
+                usernameInput.required = true;
+                passwordInput.required = true;
                 emailInput.required = false;
-
-                // Show forgot password link
-                forgotLink.style.display = 'block';
+                forgotEmailInput.required = false;
             }
         }
+
+        // On page load, check if backend requested a specific state
+        document.addEventListener('DOMContentLoaded', () => {
+            const state = "{{ state }}";
+            if (state) switchTab(state);
+        });
     </script>
 
     <!-- Custom Popup Alerts JS -->

@@ -50,11 +50,11 @@ def login():
                 return render_template("login.html")
 
         elif action == "signup":
-            email = request.form.get("email")
+            email = request.form.get("email").strip().lower()
             conn = get_connection()
             
             # 🛡️ DUPLICATE EMAIL CHECK (During Signup)
-            existing_email = conn.execute("SELECT * FROM user WHERE email=?", (email,)).fetchone()
+            existing_email = conn.execute("SELECT * FROM user WHERE LOWER(email)=?", (email,)).fetchone()
             if existing_email:
                 conn.close()
                 flash("Signup failed: This email is already registered with another account.", "error")
@@ -80,24 +80,30 @@ def login():
 @auth.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
     if request.method == "POST":
-        email = request.form["email"]
+        email_input = request.form.get("email", "").strip().lower()
+        if not email_input:
+            flash("Please enter an email address.", "error")
+            return redirect(url_for("auth.login"))
+            
         conn = get_connection()
-        user = conn.execute("SELECT * FROM user WHERE email=?", (email,)).fetchone()
+        user = conn.execute("SELECT * FROM user WHERE LOWER(email)=?", (email_input,)).fetchone()
         conn.close()
 
         if user:
             otp = random.randint(100000, 999999)
             session["otp"] = str(otp)
-            session["reset_email"] = email
-            if send_otp_email(email, otp):
+            session["reset_email"] = email_input
+            if send_otp_email(email_input, otp):
                 flash("OTP sent to your email.", "success")
-                return render_template("verify_otp.html")
+                return render_template("login.html", state="verify")
             else:
                 flash("Failed to send OTP. Please try again.", "error")
         else:
             flash("No account associated with this email.", "error")
+        
+        return redirect(url_for("auth.login"))
 
-    return render_template("forgot_password.html")
+    return render_template("login.html")
 
 
 @auth.route("/verify-otp", methods=["POST"])
@@ -107,10 +113,10 @@ def verify_otp():
 
     if user_otp == saved_otp:
         # User is "allowed" to reset their password
-        return render_template("reset_password.html")
+        return render_template("login.html", state="reset")
     else:
         flash("Invalid OTP. Please try again.", "error")
-        return render_template("verify_otp.html")
+        return render_template("login.html", state="verify")
 
 
 @auth.route("/reset-password", methods=["POST"])
