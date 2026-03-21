@@ -35,6 +35,11 @@ def init_db():
     except sqlite3.OperationalError:
         pass
 
+    try:
+        c.execute("ALTER TABLE company ADD COLUMN last_sync TIMESTAMP")
+    except sqlite3.OperationalError:
+        pass
+
     c.execute('''CREATE TABLE IF NOT EXISTS global_settings (
         key TEXT PRIMARY KEY,
         value TEXT
@@ -70,7 +75,8 @@ def init_db():
         job_level TEXT,
         experience_required TEXT,
         apply_link TEXT,
-        is_active INTEGER DEFAULT 1
+        is_active INTEGER DEFAULT 1,
+        last_sync TIMESTAMP
     )''')
 
     c.execute('''CREATE TABLE IF NOT EXISTS notifications (

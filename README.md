@@ -7,7 +7,7 @@ This application provides a single Sign-In/Sign-Up page for both Admins and User
 - **Role-Based Access**: 
   - **Admins** are routed to the Admin Dashboard (`templates/admin/`).
   - **Users** are routed to the User Dashboard (`templates/user/`).
-- **Database**: All data is stored in a SQLite `user` table with a `role` column.
+- **Database**:** All data is stored in a SQLite `user` table with a `role` column.
 - **Modern Design**: Responsive and animated UI.
 
 ## How to Run

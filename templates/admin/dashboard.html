@@ -16,6 +16,111 @@
 
     <!-- Custom Popup Alerts -->
     <link rel="stylesheet" href="{{ url_for('static', filename='alerts.css') }}">
+    
+    <style>
+        /* Modal Styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+        
+        .modal-card {
+            background: #0b112d;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        
+        .light-mode .modal-card {
+            background: #ffffff;
+            border-color: #e2e8f0;
+        }
+        
+        .modal-overlay.show .modal-card {
+            transform: scale(1);
+        }
+        
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-body {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        
+        .role-entry {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 1.2rem;
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s ease;
+        }
+        
+        .role-entry:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .role-info h4 {
+            margin: 0 0 5px 0;
+            color: #7b61ff;
+        }
+        
+        .role-info p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .btn-view {
+            background: rgba(123, 97, 255, 0.1);
+            color: #7b61ff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-view:hover {
+            background: #7b61ff;
+            color: white;
+        }
+    </style>
 </head>
 
 <body>
@@ -308,10 +413,9 @@
                         style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
                         <div style="flex: 1; min-width: 200px;">
                             <label
-                                style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Company
-                                Name</label>
+                                style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Company Name(s)</label>
                             <input type="text" name="company_name" class="ratio-input"
-                                style="width: 100%; height: 40px;" placeholder="e.g. Google" required>
+                                style="width: 100%; height: 40px;" placeholder="IBM, TCS, Google..." required>
                         </div>
                         <div style="flex: 1; min-width: 200px;">
                             <label
@@ -331,7 +435,8 @@
                                 <tr>
                                     <th>Company</th>
                                     <th>Roles</th>
-                                    <th>Sync Status</th>
+                                    <th>Status Details</th>
+                                    <th>Last Auto-Sync</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -351,10 +456,37 @@
                                             <span>{{ company['company_name'] }}</span>
                                         </div>
                                     </td>
-                                    <td><span class="status-badge status-active"
-                                            style="background: rgba(123, 97, 255, 0.1); color: #7b61ff;">{{
-                                            company['jobs']|length }} Roles</span></td>
-                                    <td>Synced recently</td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <span class="status-badge" style="background: rgba(123, 97, 255, 0.1); color: #7b61ff; display: inline-block; min-width: 80px; text-align: center;">
+                                                {{ company['jobs']|length }} Roles
+                                            </span>
+                                            {% if company['jobs']|length > 0 %}
+                                            <button class="btn-view" 
+                                                data-company="{{ company.company_name }}" 
+                                                data-jobs='{{ company.jobs | tojson | safe }}'
+                                                onclick="showRoles(this)">
+                                                <i class="fas fa-eye"></i> View
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if company['jobs']|length > 0 %}
+                                        <span style="color: #00d2ff; font-size: 0.8rem;"><i class="fas fa-check-circle"></i> Roles Found</span>
+                                        {% else %}
+                                        <span style="color: #ff7675; font-size: 0.8rem;"><i class="fas fa-times-circle"></i> No Roles</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                                            {% if company['last_sync'] %}
+                                            <i class="fas fa-clock" style="margin-right: 5px;"></i> {{ company['last_sync'].split('.')[0] }}
+                                            {% else %}
+                                            <i class="fas fa-history" style="margin-right: 5px;"></i> Never
+                                            {% endif %}
+                                        </span>
+                                    </td>
                                     <td>
                                         <form
                                             action="{{ url_for('admin.delete_entire_company', company_name=company['company_name']) }}"
@@ -505,6 +637,73 @@
                 setTimeout(() => alert.remove(), 500);
             });
         }, 5000);
+    </script>
+
+    <!-- Role Viewer Modal -->
+    <div id="roleModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modalTitle" style="margin: 0; font-weight: 600;">Job Roles</h3>
+                <button class="btn-icon" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Roles will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showRoles(btn) {
+            const companyName = btn.getAttribute('data-company');
+            const jobs = JSON.parse(btn.getAttribute('data-jobs'));
+            const modal = document.getElementById('roleModal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            
+            title.innerText = `Job Weaknesses (Roles) - ${companyName}`;
+            body.innerHTML = '';
+            
+            if (jobs.length === 0) {
+                body.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No job roles found for this company.</p>';
+            } else {
+                jobs.forEach(job => {
+                    const entry = document.createElement('div');
+                    entry.className = 'role-entry';
+                    entry.innerHTML = `
+                        <div class="role-info">
+                            <h4>${job.job_role}</h4>
+                            <p><i class="fas fa-map-marker-alt" style="margin-right: 5px;"></i> ${job.location} | <i class="fas fa-briefcase" style="margin-right: 5px;"></i> ${job.experience_required || 'Not specified'}</p>
+                        </div>
+                        <a href="${job.apply_link}" target="_blank" class="btn-view" style="text-decoration: none;">
+                            <i class="fas fa-external-link-alt"></i> Apply
+                        </a>
+                    `;
+                    body.appendChild(entry);
+                });
+            }
+            
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('roleModal');
+            modal.classList.remove('show');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        // Close on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Close on click outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('roleModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
     </script>
 
     <!-- Custom Popup Alerts JS -->
