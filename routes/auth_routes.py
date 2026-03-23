@@ -11,6 +11,7 @@ ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 
 
+@auth.route("/login", methods=["GET", "POST"])
 @auth.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -47,7 +48,7 @@ def login():
             else:
                 conn.close()
                 flash("Invalid credentials", "error")
-                return render_template("login.html")
+                return render_template("login.html", state="login")
 
         elif action == "signup":
             email = request.form.get("email").strip().lower()
@@ -58,7 +59,7 @@ def login():
             if existing_email:
                 conn.close()
                 flash("Signup failed: This email is already registered with another account.", "error")
-                return render_template("login.html")
+                return render_template("login.html", state="signup")
 
             try:
                 conn.execute(
@@ -71,9 +72,14 @@ def login():
                 flash("Username already exists", "error")
             finally:
                 conn.close()
-            return render_template("login.html")
+            return render_template("login.html", state="login")
 
-    return render_template("login.html")
+    return render_template("login.html", state="login")
+
+
+@auth.route("/signup")
+def signup():
+    return render_template("login.html", state="signup")
 
 
 

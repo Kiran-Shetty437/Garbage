@@ -1,12 +1,14 @@
 :root {
-    /* Color Palette */
-    --primary-color: #2563eb;
-    --secondary-color: #3b82f6;
-    --accent-color: #f59e0b;
-    --bg-color: #f3f4f6;
-    --text-color: #1f2937;
-    --white: #ffffff;
-    --border-color: #e5e7eb;
+    /* Premium Color Palette */
+    --primary-color: #FCD34D; /* Gold/Yellow */
+    --primary-hover: #FBBF24;
+    --secondary-color: #111827; /* Dark Gray */
+    --accent-color: #F59E0B;
+    --bg-color: #F8FAFC;
+    --white: #FFFFFF;
+    --border-color: #E2E8F0;
+    --input-bg: rgba(248, 250, 252, 0.8);
+    --glass: rgba(255, 255, 255, 0.4);
 
     /* Typography */
     --font-heading: 'Outfit', sans-serif;
@@ -129,8 +131,8 @@ body.dark-mode .reset-btn {
 
 body {
     font-family: var(--font-body);
-    background-color: var(--bg-color);
-    color: var(--text-color);
+    background: linear-gradient(135deg, #F1F5F9 0%, #CBD5E1 100%);
+    color: var(--secondary-color);
     margin: 0;
     padding: 0;
     display: flex;
@@ -139,53 +141,157 @@ body {
     min-height: 100vh;
 }
 
-/* Container & Forms */
+/* Container & Forms - Premium Split Layout */
 .container {
-    width: 100%;
-    max-width: 400px;
-    padding: 2rem;
+    width: 95%;
+    max-width: 1080px;
+    height: 720px; /* Fixed height for reliable child sizing */
+    background: #FFFDF5;
+    border-radius: 40px;
+    display: flex;
+    align-items: stretch;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.1);
+    overflow: hidden; 
+    position: relative;
+    margin: 20px auto;
 }
 
 .form-box {
-    background: var(--white);
-    padding: 2.5rem;
-    border-radius: 1rem;
-    /* Rounded corners */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    /* Premium shadow */
-    transition: transform 0.3s ease;
+    width: 40%;
+    flex: 0 0 40%;
+    height: 100%;
+    padding: 2.5rem 3.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Logo at top, footer at bottom via margin-top: auto */
+    background: linear-gradient(135deg, #FFFDF5 0%, #FFF5D6 100%);
+    position: relative;
+    z-index: 20;
+    overflow-y: auto;
+}
+
+.hero-slider {
+    width: 60%;
+    flex: 0 0 60%;
+    height: calc(100% - 30px);
+    margin: 15px;
+    position: relative;
+    overflow: hidden;
+    background: #F9FAFB;
+    border-radius: 32px;
+    z-index: 10;
+}
+
+.hero-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    z-index: 5;
+    animation: fadeSlider 30s infinite;
+}
+
+/* 6 images, 5 seconds each turn */
+.hero-slide:nth-child(1) { animation-delay: 0s; }
+.hero-slide:nth-child(2) { animation-delay: 5s; }
+.hero-slide:nth-child(3) { animation-delay: 10s; }
+.hero-slide:nth-child(4) { animation-delay: 15s; }
+.hero-slide:nth-child(5) { animation-delay: 20s; }
+.hero-slide:nth-child(6) { animation-delay: 25s; }
+
+@keyframes fadeSlider {
+    0% { opacity: 0; }
+    2% { opacity: 1; }
+    16.66% { opacity: 1; }
+    18.66% { opacity: 0; }
+    100% { opacity: 0; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+    .container {
+        flex-direction: column;
+        height: auto;
+        max-width: 450px;
+        margin: 10px;
+        background: linear-gradient(135deg, #FFFDF5 0%, #FFF5D6 100%);
+    }
+    .hero-slider {
+        display: none !important;
+    }
+    .form-box {
+        width: 100% !important;
+        padding: 2rem;
+        transform: none !important;
+    }
+}
+
+.form-box {
+    padding: 3.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
 }
 
 .form-box:hover {
-    transform: translateY(-5px);
-    /* Micro-animation */
+    transform: none; /* Disable individual float to keep layout stable */
+}
+
+/* Branding & Logo Styling */
+.logo {
+    justify-content: flex-start !important;
+    margin-bottom: 2rem !important;
+}
+
+.logo div {
+    background: #111827 !important;
+    border-radius: 50% !important; /* Circle like the design */
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 1rem !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.logo span {
+    font-family: var(--font-heading);
+    color: #111827 !important;
+    opacity: 0.9;
+    font-weight: 800; /* Bolder logo text */
 }
 
 .header {
-    text-align: center;
-    margin-bottom: 2rem;
+    text-align: left;
+    margin-bottom: 1.5rem;
 }
 
-h1 {
+.header h1 {
     font-family: var(--font-heading);
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
-    color: var(--primary-color);
+    color: #111827;
 }
 
-p {
-    color: var(--text-color);
+.header p {
+    color: #4B5563;
     font-size: 1rem;
-    opacity: 0.75;
+    opacity: 0.8;
 }
 
-/* Tab Switcher */
+/* Hide Default Tab Switcher to match minimalist design, but keep it functional */
 .tab-switcher {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 2rem;
-    border-bottom: 2px solid var(--border-color);
+    display: none !important;
 }
 
 .tab-btn {
@@ -205,26 +311,30 @@ p {
 }
 
 .input-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
 }
 
 label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.6rem;
+    font-size: 0.85rem;
     font-weight: 500;
-    color: var(--text-color);
-    opacity: 0.85;
+    color: #111827;
+    opacity: 0.8;
 }
 
 input[type="text"],
 input[type="password"],
 input[type="email"] {
     width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    padding: 0.9rem 1.25rem;
+    background: var(--white);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 14px;
     font-family: var(--font-body);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
 }
 
 input[type="text"]:focus,
@@ -232,28 +342,32 @@ input[type="password"]:focus,
 input[type="email"]:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
-    /* Focus ring */
+    box-shadow: 0 0 0 4px rgba(252, 211, 77, 0.2);
+    background: #fff;
 }
 
 .submit-btn {
     width: 100%;
-    padding: 0.85rem;
+    padding: 1rem;
     background-color: var(--primary-color);
-    color: var(--white);
+    color: #111827;
     border: none;
-    border-radius: 0.5rem;
+    border-radius: 14px;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(252, 211, 77, 0.3);
 }
 
 .submit-btn:hover {
-    background-color: #1d4ed8;
+    background-color: var(--primary-hover);
     transform: translateY(-2px);
+    box-shadow: 0 15px 25px -5px rgba(252, 211, 77, 0.4);
 }
 
+/* Social Buttons - Mimicking the design using existing elements or pseudo-elements */
 .flash-messages {
     margin-top: 1.5rem;
 }

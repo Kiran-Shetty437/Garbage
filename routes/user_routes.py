@@ -89,9 +89,12 @@ def dashboard():
                 "apply_link": row["apply_link"] or row["official_page_link"] or "#"
             })
 
+    # Filter out companies with 0 jobs for the USER view
+    final_companies = [c for c in companies_dict.values() if len(c["jobs"]) > 0]
+
     return render_template("user/dashboard.html", 
                            username=session.get("username"),
-                           companies=list(companies_dict.values()))
+                           companies=final_companies)
 
 
 @user.route("/details", methods=["GET", "POST"])

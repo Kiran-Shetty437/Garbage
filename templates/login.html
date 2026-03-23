@@ -11,28 +11,31 @@
 
     <!-- Custom Popup Alerts -->
     <link rel="stylesheet" href="{{ url_for('static', filename='alerts.css') }}">
+
+    <style>
+        .slide-1 { background-image: url("{{ url_for('static', filename='hero_login.png') }}"); }
+        .slide-2 { background-image: url("{{ url_for('static', filename='hero_login_2.png') }}"); }
+        .slide-3 { background-image: url("{{ url_for('static', filename='hero_login_3.png') }}"); }
+        .slide-4 { background-image: url("{{ url_for('static', filename='hero_login_4.png') }}"); }
+        .slide-5 { background-image: url("{{ url_for('static', filename='hero_login_5.png') }}"); }
+        .slide-6 { background-image: url("{{ url_for('static', filename='hero_login_6.png') }}"); }
+    </style>
 </head>
 
 <body>
     <div class="container">
         <div class="form-box">
-            <div class="header">
-                <div class="logo"
-                    style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 1.5rem;">
+            <div class="header" style="margin-bottom: 2.5rem;">
+                <a href="{{ url_for('auth.login') }}" class="logo"
+                    style="display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 2rem;">
                     <div
-                        style="width: 40px; height: 40px; background: var(--primary-color); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                        style="width: 32px; height: 32px; background: #111827; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                         <span style="font-weight: 800;">C</span>
                     </div>
-                    <span style="font-size: 1.5rem; font-weight: 700; color: #1e293b;">CareerConnect</span>
-                </div>
-                <h1 id="form-title">Welcome Back</h1>
-                <p id="form-subtitle">Please enter your details to sign in.</p>
-            </div>
-
-            <!-- Tab switcher for Login / Sign Up -->
-            <div class="tab-switcher" id="tab-switcher">
-                <button class="tab-btn active" onclick="switchTab('login')">Login</button>
-                <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
+                    <span style="font-size: 1.5rem; font-weight: 800; color: #111827; opacity: 0.9;">CareerConnect</span>
+                </a>
+                <h1 id="form-title" style="margin-bottom: 0.5rem;">Welcome Back</h1>
+                <p id="form-subtitle" style="color: #6b7280;">Please enter your details to sign in.</p>
             </div>
 
             <form action="/" method="POST" id="auth-form">
@@ -54,7 +57,7 @@
                         <input type="password" id="password" name="password" placeholder="Enter your password">
                         <div style="text-align: right; margin-top: 5px;" id="forgot-password-link">
                             <a href="javascript:void(0)" onclick="switchTab('forgot')"
-                                style="font-size: 0.85rem; color: var(--primary-color); text-decoration: none;">Forgot
+                                style="font-size: 0.85rem; color: #111827; text-decoration: none; opacity: 0.6;">Forgot
                                 Password?</a>
                         </div>
                     </div>
@@ -82,142 +85,163 @@
                     </div>
                 </div>
 
-                <button type="submit" class="submit-btn" id="submit-btn">Sign In</button>
+                <button type="submit" class="submit-btn" id="submit-btn" style="margin-bottom: 2rem;">Sign In</button>
+
+                <!-- Navigation Link Between Button and Social Divider -->
+                <div id="auth-toggle-link" style="text-align: left; margin-bottom: 2rem; font-size: 0.95rem; color: #6b7280;">
+                    <span id="toggle-text" style="opacity: 0.8;">Don't have an account?</span>
+                    <a href="{{ url_for('auth.signup') }}" id="toggle-action" onclick="switchTab('signup'); return false;" style="font-weight: 800; text-decoration: none; color: #111827; transition: color 0.3s; margin-left: 8px;">Sign Up</a>
+                </div>
+
+                <!-- Left-Aligned Social Divider -->
+                <div style="text-align: left; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 2rem; margin-top: 1rem;">
+                    <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 1.5rem;">Or continue with Apple or Google</p>
+                </div>
 
                 <div id="back-to-login" style="display: none; text-align: center; margin-top: 1rem;">
-                    <a href="javascript:void(0)" onclick="switchTab('login')"
+                    <a href="{{ url_for('auth.login') }}" onclick="switchTab('login'); return false;"
                         style="color: #6b7280; text-decoration: none; font-size: 0.9rem;">Back to Login</a>
                 </div>
             </form>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            <div class="flash-messages">
-                {% for category, message in messages %}
-                <div class="alert {{ category }}">{{ message }}</div>
-                {% endfor %}
+            <div class="form-footer" style="margin-top: auto; display: flex; justify-content: flex-end; font-size: 0.95rem; color: #6b7280; padding-bottom: 1rem;">
+                <div>
+                    <a href="#" style="text-decoration: none; color: #6b7280; opacity: 0.7;">Terms & Conditions</a>
+                </div>
             </div>
-            {% endif %}
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                    <div class="alert {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
             {% endwith %}
+        </div> <!-- End Current Form Box -->
+
+        <!-- Dynamic Hero Slider (40% Width area) -->
+        <div class="hero-slider">
+            <div class="hero-slide slide-1"></div>
+            <div class="hero-slide slide-2"></div>
+            <div class="hero-slide slide-3"></div>
+            <div class="hero-slide slide-4"></div>
+            <div class="hero-slide slide-5"></div>
+            <div class="hero-slide slide-6"></div>
         </div>
     </div>
 
     <script>
         function switchTab(tab) {
+            const container = document.querySelector('.container');
             const form = document.getElementById('auth-form');
             const formAction = document.getElementById('form-action');
             const submitBtn = document.getElementById('submit-btn');
             const title = document.getElementById('form-title');
             const subtitle = document.getElementById('form-subtitle');
-            const tabs = document.querySelectorAll('.tab-btn');
-            const tabSwitcher = document.getElementById('tab-switcher');
             
             const loginSignupFields = document.getElementById('login-signup-fields');
             const forgotFields = document.getElementById('forgot-fields');
             const emailGroup = document.getElementById('email-group');
             const backToLogin = document.getElementById('back-to-login');
             
+            // Footer elements
+            const toggleLink = document.getElementById('auth-toggle-link');
+            const toggleText = document.getElementById('toggle-text');
+            const toggleAction = document.getElementById('toggle-action');
+ 
             // Inputs
             const usernameInput = document.getElementById('username');
             const passwordInput = document.getElementById('password');
             const emailInput = document.getElementById('email');
             const forgotEmailInput = document.getElementById('forgot-email');
-
+ 
+            // Elements to hide/show
+            const forgotPasswordLink = document.getElementById('forgot-password-link');
+ 
             if (tab === 'signup') {
                 form.action = "{{ url_for('auth.login') }}";
                 formAction.value = 'signup';
                 submitBtn.textContent = 'Sign Up';
                 title.textContent = 'Create Account';
-                subtitle.textContent = 'Join us today!';
-                tabs[0].classList.remove('active');
-                tabs[1].classList.add('active');
-                tabSwitcher.style.display = 'flex';
+                subtitle.textContent = 'Join us today';
                 loginSignupFields.style.display = 'block';
                 forgotFields.style.display = 'none';
                 emailGroup.style.display = 'block';
                 backToLogin.style.display = 'none';
+                forgotPasswordLink.style.display = 'none';
                 
+                // Update Footer
+                toggleLink.style.display = 'block';
+                toggleText.textContent = 'Have account?';
+                toggleAction.textContent = 'Sign In';
+                toggleAction.setAttribute('onclick', "switchTab('login'); return false;");
+                toggleAction.setAttribute('href', "{{ url_for('auth.login') }}");
+
                 usernameInput.required = true;
                 passwordInput.required = true;
                 emailInput.required = true;
-                emailInput.name = "email"; // Ensure normal email field has correct name
+                emailInput.name = "email";
                 forgotEmailInput.required = false;
-                forgotEmailInput.name = "forgot_email"; // Reset forgot field name
             } else if (tab === 'forgot') {
                 form.action = "{{ url_for('auth.forgot_password') }}";
                 formAction.value = 'forgot';
                 submitBtn.textContent = 'Send OTP';
                 title.textContent = 'Forgot Password';
                 subtitle.textContent = 'Enter your email to receive an OTP.';
-                tabSwitcher.style.display = 'none';
                 loginSignupFields.style.display = 'none';
                 forgotFields.style.display = 'block';
                 backToLogin.style.display = 'block';
+                toggleLink.style.display = 'none';
                 
                 usernameInput.required = false;
                 passwordInput.required = false;
                 emailInput.required = false;
-                emailInput.name = "hidden_email"; // Prevent clash with forgot email field
                 forgotEmailInput.required = true;
-                forgotEmailInput.name = "email"; // Ensure forgot field has the name backend expects
+                forgotEmailInput.name = "email";
             } else if (tab === 'verify') {
                 form.action = "{{ url_for('auth.verify_otp') }}";
                 formAction.value = 'verify';
                 submitBtn.textContent = 'Verify OTP';
-                submitBtn.style.backgroundColor = '#10b981';
                 title.textContent = 'Verify OTP';
                 subtitle.textContent = 'Please enter the 6-digit code sent to your email.';
-                tabSwitcher.style.display = 'none';
                 loginSignupFields.style.display = 'none';
-                forgotFields.style.display = 'none';
                 document.getElementById('verify-fields').style.display = 'block';
-                document.getElementById('reset-fields').style.display = 'none';
                 backToLogin.style.display = 'block';
-                
-                usernameInput.required = false;
-                passwordInput.required = false;
-                emailInput.required = false;
-                document.getElementById('otp').required = true;
+                toggleLink.style.display = 'none';
             } else if (tab === 'reset') {
                 form.action = "{{ url_for('auth.reset_password') }}";
                 formAction.value = 'reset';
                 submitBtn.textContent = 'Update Password';
-                submitBtn.style.backgroundColor = 'var(--primary-color)';
                 title.textContent = 'Reset Password';
                 subtitle.textContent = 'Enter your new password below.';
-                tabSwitcher.style.display = 'none';
                 loginSignupFields.style.display = 'none';
-                forgotFields.style.display = 'none';
-                document.getElementById('verify-fields').style.display = 'none';
                 document.getElementById('reset-fields').style.display = 'block';
                 backToLogin.style.display = 'block';
-                
-                usernameInput.required = false;
-                passwordInput.required = false;
-                emailInput.required = false;
-                document.getElementById('new-password').required = true;
-                document.getElementById('new-password').name = "password"; // Match backend expectation
+                toggleLink.style.display = 'none';
             } else {
                 form.action = "{{ url_for('auth.login') }}";
                 formAction.value = 'login';
                 submitBtn.textContent = 'Sign In';
-                submitBtn.style.backgroundColor = '';
                 title.textContent = 'Welcome Back';
                 subtitle.textContent = 'Please enter your details to sign in.';
-                tabs[1].classList.remove('active');
-                tabs[0].classList.add('active');
-                tabSwitcher.style.display = 'flex';
                 loginSignupFields.style.display = 'block';
                 forgotFields.style.display = 'none';
-                document.getElementById('verify-fields').style.display = 'none';
-                document.getElementById('reset-fields').style.display = 'none';
                 emailGroup.style.display = 'none';
                 backToLogin.style.display = 'none';
+                forgotPasswordLink.style.display = 'block';
                 
+                // Update Footer
+                toggleLink.style.display = 'block';
+                toggleText.textContent = "Don't have an account?";
+                toggleAction.textContent = 'Sign Up';
+                toggleAction.setAttribute('onclick', "switchTab('signup'); return false;");
+                toggleAction.setAttribute('href', "{{ url_for('auth.signup') }}");
+
                 usernameInput.required = true;
                 passwordInput.required = true;
                 emailInput.required = false;
-                forgotEmailInput.required = false;
             }
         }
 
