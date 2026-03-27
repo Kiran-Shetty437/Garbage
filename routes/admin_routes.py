@@ -57,25 +57,36 @@ def dashboard():
     
     # Calculate some stats for the dashboard
     total_users = len(users)
-    active_today = conn.execute("SELECT COUNT(*) as count FROM user WHERE role = 'user' AND created_at >= date('now')").fetchone()["count"]
+    active_today = conn.execute("SELECT COUNT(*) as count FROM user WHERE role = 'user' AND date(last_activity) = date('now')").fetchone()["count"]
+
+    # Calculate avg screen time
+    avg_row = conn.execute("SELECT AVG(total_screen_time) as avg_time FROM user WHERE role = 'user'").fetchone()
+    avg_minutes = avg_row["avg_time"] if avg_row["avg_time"] and avg_row["avg_time"] is not None else 0
+    avg_h = int(avg_minutes // 60)
+    avg_m = int(avg_minutes % 60)
+    avg_screen_time = f"{avg_h}h {avg_m}m"
     
     # Real data for General View Chart (Last 10 days)
-    chart_data = conn.execute("""
+    # We'll generate the last 10 days to ensure the chart shows the timeline even with holes
+    from datetime import datetime, timedelta
+    today = datetime.now()
+    dates = [(today - timedelta(days=i)).date().isoformat() for i in range(9, -1, -1)]
+    
+    chart_data_map = {d: 0 for d in dates}
+    
+    db_chart_data = conn.execute("""
         SELECT date(created_at) as join_date, COUNT(*) as count 
         FROM user 
-        WHERE role = 'user' 
+        WHERE role = 'user' AND created_at >= ?
         GROUP BY join_date 
-        ORDER BY join_date DESC 
-        LIMIT 10
-    """).fetchall()
+    """, (dates[0],)).fetchall()
     
-    chart_labels = [row["join_date"] for row in reversed(chart_data)]
-    chart_values = [row["count"] for row in reversed(chart_data)]
-    
-    # Ensure at least some data for visual consistency if empty
-    if not chart_labels:
-        chart_labels = ["No Data"]
-        chart_values = [0]
+    for row in db_chart_data:
+        if row["join_date"] in chart_data_map:
+            chart_data_map[row["join_date"]] = row["count"]
+            
+    chart_labels = dates
+    chart_values = [chart_data_map[d] for d in dates]
     
     conn.close()
 
@@ -90,6 +101,7 @@ def dashboard():
                            commission_ratio=commission_ratio,
                            total_users=total_users,
                            active_today=active_today,
+                           avg_screen_time=avg_screen_time,
                            chart_labels=chart_labels,
                            chart_values=chart_values,
                            notification_report=notification_report)
@@ -205,6 +217,24 @@ def resume_templates():
                            username=session.get("username"),
                            templates=templates)
 
+
+
+@admin.route("/admin/notification-report")
+def notification_report():
+    if session.get("role") != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+        
+    conn = get_connection()
+    # Join notifications with user to get names
+    reports = conn.execute("""
+        SELECT n.*, u.username, u.email 
+        FROM notifications n
+        JOIN user u ON n.user_id = u.id
+        ORDER BY n.sent_at DESC
+    """).fetchall()
+    conn.close()
+    
+    return jsonify([dict(r) for r in reports])
 
 
 @admin.route("/admin/toggle-template/<int:template_id>", methods=["POST"])

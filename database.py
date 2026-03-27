@@ -3,6 +3,8 @@ from config import DB_NAME
 
 def get_connection():
     conn = sqlite3.connect(DB_NAME, timeout=20)
+    # Enable Write-Ahead Logging for better concurrency
+    conn.execute('PRAGMA journal_mode=WAL')
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -20,7 +22,8 @@ def init_db():
         resume_filename TEXT,
         applied_job TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        total_screen_time INTEGER DEFAULT 0
+        total_screen_time INTEGER DEFAULT 0,
+        notifications_enabled INTEGER DEFAULT 1
     )''')
 
     try:
@@ -32,6 +35,17 @@ def init_db():
 
     try:
         c.execute("ALTER TABLE user ADD COLUMN total_screen_time INTEGER DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        # SQLite cannot use CURRENT_TIMESTAMP as a default in ALTER TABLE
+        c.execute("ALTER TABLE user ADD COLUMN last_activity TIMESTAMP DEFAULT '2024-01-01 00:00:00'")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        c.execute("ALTER TABLE user ADD COLUMN notifications_enabled INTEGER DEFAULT 1")
     except sqlite3.OperationalError:
         pass
 
@@ -83,9 +97,27 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
         company_id INTEGER,
+        job_role TEXT,
+        company_name TEXT,
+        is_seen INTEGER DEFAULT 0,
         sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(user_id, company_id)
     )''')
+
+    try:
+        c.execute("ALTER TABLE notifications ADD COLUMN is_seen INTEGER DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        c.execute("ALTER TABLE notifications ADD COLUMN job_role TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        c.execute("ALTER TABLE notifications ADD COLUMN company_name TEXT")
+    except sqlite3.OperationalError:
+        pass
 
     c.execute('''CREATE TABLE IF NOT EXISTS resume_templates (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

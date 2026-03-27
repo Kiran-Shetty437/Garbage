@@ -1,15 +1,18 @@
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from config import SMTP_SERVER, SMTP_PORT, SENDER_EMAIL, SENDER_PASSWORD
+from config import SMTP_SERVER, SMTP_PORT, SENDER_EMAIL, SENDER_PASSWORD, BASE_URL
 
 
-def send_job_alert(user_email, username, company, role, link):
+def send_job_alert(user_email, username, company, role, link, notification_id):
 
     msg = MIMEMultipart()
     msg["From"] = SENDER_EMAIL
     msg["To"] = user_email
     msg["Subject"] = f"Job Alert: {role} at {company}"
+
+    # Tracking link
+    tracking_link = f"{BASE_URL}/notification/view/{notification_id}?redirect={link}"
 
     body = f"""
 Hi {username}
@@ -20,7 +23,7 @@ Company: {company}
 Role: {role}
 
 Apply here:
-{link}
+{tracking_link}
 """
 
     msg.attach(MIMEText(body, "plain"))
@@ -35,7 +38,7 @@ Apply here:
         return True
 
     except Exception as e:
-        print(e)
+        print(f"SMTP Error: {e}")
         return False
 
 

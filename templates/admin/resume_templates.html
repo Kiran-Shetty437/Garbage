@@ -138,9 +138,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo">
-                <div class="logo-icon"
-                    style="background: var(--primary-blue); border-radius: 8px; font-weight: 800; font-size: 1.2rem;">C
-                </div>
+                <div class="logo-icon">C</div>
                 <span>CareerConnect</span>
             </div>
 
@@ -176,6 +174,9 @@
                         <i class="fas fa-moon"></i> Dark
                     </button>
                 </div>
+                <a href="{{ url_for('auth.logout') }}" class="nav-link logout-sidebar-link">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
             </div>
         </aside>
 
@@ -184,12 +185,6 @@
             <header class="top-bar">
                 <div class="page-title">Resume Builder Management</div>
 
-                <div class="user-profile">
-                    <div class="user-details" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <span style="font-size: 0.9rem; font-weight: 500;">{{ username or 'Super Admin' }}</span>
-                        <div class="avatar">{{ (username or 'A')[0].upper() }}</div>
-                    </div>
-                </div>
             </header>
 
             <div class="breadcrumb" style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.9rem;">

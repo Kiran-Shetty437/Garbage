@@ -1,16 +1,18 @@
 :root {
-    --bg-dark: #070b1f;
-    --sidebar-bg: #0b112d;
-    --card-bg: rgba(255, 255, 255, 0.05);
-    --text-primary: #ffffff;
-    --text-secondary: #8b96c9;
-    --primary-blue: #3a86ff;
-    --card-purple: linear-gradient(135deg, #7b61ff, #5c41ff);
-    --card-cyan: linear-gradient(135deg, #00d2ff, #3a7bd5);
-    --card-blue: linear-gradient(135deg, #4facfe, #00f2fe);
-    --card-orange: linear-gradient(135deg, #ff9a9e, #fecfef);
-    --card-red: linear-gradient(135deg, #ff6b6b, #ee5253);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --bg-dark: #0f172a;
+    --sidebar-bg: #1e293b;
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --primary: #10b981;
+    --primary-hover: #059669;
+    --primary-soft: rgba(16, 185, 129, 0.1);
+    --card-purple: linear-gradient(135deg, #6366f1, #4f46e5);
+    --card-emerald: linear-gradient(135deg, #10b981, #059669);
+    --card-indigo: linear-gradient(135deg, #6366f1, #4338ca);
+    --card-rose: linear-gradient(135deg, #f43f5e, #e11d48);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .light-mode {
@@ -95,20 +97,29 @@ body {
 .logo {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 1.5rem;
-    font-weight: 700;
+    gap: 12px;
     margin-bottom: 3rem;
 }
 
 .logo-icon {
-    width: 35px;
-    height: 35px;
-    background: var(--primary-blue);
-    border-radius: 8px;
+    width: 38px;
+    height: 38px;
+    background: var(--primary);
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: white;
+    font-weight: 800;
+    font-size: 1.3rem;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.logo span {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
 }
 
 .nav-links {
@@ -135,12 +146,27 @@ body {
 
 .nav-link:hover,
 .nav-link.active {
-    background: var(--primary-blue);
+    background: var(--primary);
     color: white;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
 }
 
 .nav-link i {
     font-size: 1.2rem;
+}
+
+.nav-link.logout-sidebar-link {
+    color: #ff7675;
+    background: rgba(255, 118, 117, 0.05);
+    margin-top: 1rem;
+    border: 1px solid rgba(255, 118, 117, 0.1);
+}
+
+.nav-link.logout-sidebar-link:hover {
+    background: #ff7675;
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 118, 117, 0.3);
+    border-color: transparent;
 }
 
 .sidebar-footer {
@@ -167,7 +193,7 @@ body {
 }
 
 .btn-toggle.active {
-    background: var(--primary-blue);
+    background: var(--primary);
     color: white;
 }
 
@@ -227,14 +253,16 @@ body {
 }
 
 .avatar {
-    width: 40px;
-    height: 40px;
-    background: var(--primary-blue);
+    width: 42px;
+    height: 42px;
+    background: var(--primary);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
+    font-weight: 800;
+    color: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 /* Dashboard Summary Cards */
@@ -253,21 +281,10 @@ body {
     overflow: hidden;
 }
 
-.stat-card.purple {
-    background: var(--card-purple);
-}
-
-.stat-card.cyan {
-    background: #32c5ff;
-}
-
-.stat-card.indigo {
-    background: #5c67f2;
-}
-
-.stat-card.orange {
-    background: #ff7675;
-}
+.stat-card.purple { background: var(--card-purple); }
+.stat-card.cyan { background: var(--card-emerald); }
+.stat-card.indigo { background: var(--card-indigo); }
+.stat-card.orange { background: var(--card-rose); }
 
 .stat-card .card-label {
     font-size: 0.9rem;
@@ -455,24 +472,27 @@ td {
 .user-avatar-mini {
     width: 32px;
     height: 32px;
-    background: var(--primary-blue);
+    background: var(--primary);
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.8rem;
-    font-weight: bold;
+    font-weight: 800;
+    color: white;
 }
 
 .status-badge {
-    padding: 4px 12px;
-    border-radius: 6px;
-    font-size: 0.8rem;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
 .status-active {
-    background: rgba(0, 210, 255, 0.1);
-    color: #00d2ff;
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
 }
 
 /* Flash Messages */

@@ -140,9 +140,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo">
-                <div class="logo-icon"
-                    style="background: var(--primary-blue); border-radius: 8px; font-weight: 800; font-size: 1.2rem;">C
-                </div>
+                <div class="logo-icon">C</div>
                 <span>CareerConnect</span>
             </div>
 
@@ -179,6 +177,9 @@
                         <i class="fas fa-moon"></i> Dark
                     </button>
                 </div>
+                <a href="{{ url_for('auth.logout') }}" class="nav-link logout-sidebar-link">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
             </div>
         </aside>
 
@@ -189,20 +190,12 @@
 
                 <div class="search-container">
                     <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="search-input" placeholder="Search profiles, users, or data...">
+                    <input type="text" id="globalSearch" class="search-input" placeholder="Search profiles, users, or data...">
                 </div>
 
                 <div class="user-profile">
-                    <button class="btn-icon"><i class="fas fa-envelope"></i></button>
+                    <button class="btn-icon" onclick="showNotificationReport()"><i class="fas fa-envelope"></i></button>
                     <button class="btn-icon"><i class="fas fa-bell"></i></button>
-                    <div class="user-details" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <span style="font-size: 0.9rem; font-weight: 500;">{{ username or 'Super Admin' }}</span>
-                        <div class="avatar">{{ (username or 'A')[0].upper() }}</div>
-                        <i class="fas fa-chevron-down" style="font-size: 0.8rem; color: var(--text-secondary);"></i>
-                    </div>
-                    <a href="{{ url_for('auth.logout') }}" class="logout-link">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
                 </div>
             </header>
 
@@ -228,7 +221,7 @@
                                 stroke-width="2" />
                         </svg>
                     </div>
-                    <div class="stat-card cyan">
+                    <div class="stat-card cyan" style="cursor: pointer;" onclick="filterToday()">
                         <span class="card-label">Active Today</span>
                         <div class="card-value">{{ active_today }}</div>
                         <div class="card-icon"><i class="fas fa-user-check"></i></div>
@@ -239,22 +232,14 @@
                     </div>
                     <div class="stat-card indigo">
                         <span class="card-label">Avg Screen Time</span>
-                        <div class="card-value">2h 45m</div>
+                        <div class="card-value">{{ avg_screen_time }}</div>
                         <div class="card-icon"><i class="fas fa-clock"></i></div>
                         <svg class="mini-sparkline" viewBox="0 0 100 30" preserveAspectRatio="none">
                             <path d="M0,20 Q10,5 25,25 T50,15 T75,25 T100,5" fill="none" stroke="rgba(255,255,255,0.4)"
                                 stroke-width="2" />
                         </svg>
                     </div>
-                    <div class="stat-card orange">
-                        <span class="card-label">Commission Ratio</span>
-                        <div class="card-value">{{ commission_ratio }}%</div>
-                        <div class="card-icon"><i class="fas fa-percentage"></i></div>
-                        <svg class="mini-sparkline" viewBox="0 0 100 30" preserveAspectRatio="none">
-                            <path d="M0,25 L20,20 L40,25 L60,15 L80,20 L100,5" fill="none"
-                                stroke="rgba(255,255,255,0.4)" stroke-width="2" />
-                        </svg>
-                    </div>
+
                 </div>
 
                 <div class="dashboard-grid">
@@ -316,17 +301,7 @@
                             </div>
                         </div>
 
-                        <div class="glass-card" style="padding: 1.5rem;">
-                            <div style="font-weight: 600; margin-bottom: 1rem;">Apply Ratio</div>
-                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">Current
-                                system
-                                commission ratio</p>
-                            <form action="{{ url_for('admin.update_ratio') }}" method="POST" class="ratio-form">
-                                <input type="number" step="0.1" name="ratio" value="{{ commission_ratio }}"
-                                    class="ratio-input">
-                                <button type="submit" class="btn-primary">Apply</button>
-                            </form>
-                        </div>
+
                     </div>
                 </div>
             </div> <!-- End graphs-view -->
@@ -355,12 +330,12 @@
                                     <th>Email</th>
                                     <th>Joined Date</th>
                                     <th>Screen Time</th>
-                                    <th>Activity Trend</th>
+                                    <th>Last Active</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="userTableBody">
                                 {% for user in users %}
                                 <tr>
                                     <td>#{{ user['id'] }}</td>
@@ -378,10 +353,9 @@
                                         % 60) }}m
                                     </td>
                                     <td>
-                                        <svg height="20" width="80">
-                                            <polyline points="0,15 10,12 20,18 30,5 40,10 50,15 60,3 70,8 80,5"
-                                                fill="none" stroke="#7b61ff" stroke-width="2" />
-                                        </svg>
+                                        <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                                            {{ user['last_activity'].split(' ')[0] if user['last_activity'] else 'N/A' }}
+                                        </span>
                                     </td>
                                     <td><span class="status-badge status-active">Active</span></td>
                                     <td>
@@ -440,7 +414,7 @@
                                     <th>Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="companyTableBody">
                                 {% for company in companies %}
                                 <tr>
                                     <td>
@@ -548,12 +522,12 @@
                         datasets: [{
                             label: 'New Users',
                             data: chartValues,
-                            borderColor: '#7b61ff',
-                            backgroundColor: 'rgba(123, 97, 255, 0.2)',
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.2)',
                             tension: 0.4,
                             fill: true,
                             pointRadius: 4,
-                            pointBackgroundColor: '#7b61ff'
+                            pointBackgroundColor: '#10b981'
                         }]
                     },
                     options: {
@@ -609,6 +583,50 @@
             localStorage.setItem('admin-theme', theme);
         }
 
+        async function showNotificationReport() {
+            const modal = document.getElementById('roleModal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            
+            title.innerText = "Job Notification Report";
+            body.innerHTML = '<div style="text-align:center; padding: 2rem;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>Loading reports...</p></div>';
+            
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+
+            try {
+                const response = await fetch('/admin/notification-report');
+                const data = await response.json();
+                
+                body.innerHTML = '';
+                if (data.length === 0) {
+                    body.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No job notifications have been sent yet.</p>';
+                } else {
+                    data.forEach(report => {
+                        const isSeen = report.is_seen === 1;
+                        const entry = document.createElement('div');
+                        entry.className = 'role-entry';
+                        entry.innerHTML = `
+                            <div class="role-info">
+                                <h4>${report.company_name || 'N/A'}: ${report.job_role || 'Unknown'}</h4>
+                                <p><i class="fas fa-user" style="margin-right: 5px;"></i> ${report.username} (${report.email})</p>
+                                <p><i class="fas fa-calendar-alt" style="margin-right: 5px;"></i> Sent: ${report.sent_at.split('.')[0]}</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="color: ${isSeen ? '#00d2ff' : '#ff7675'}; font-size: 0.8rem; font-weight: 600;">
+                                    <i class="fas ${isSeen ? 'fa-eye' : 'fa-eye-slash'}" style="margin-right: 5px;"></i>
+                                    ${isSeen ? 'Seen' : 'Not Seen'}
+                                </div>
+                            </div>
+                        `;
+                        body.appendChild(entry);
+                    });
+                }
+            } catch (err) {
+                body.innerHTML = '<p style="text-align: center; color: #ff7675;">Error loading report. Please try again.</p>';
+            }
+        }
+
         // Initialize theme and view on load
         document.addEventListener('DOMContentLoaded', function () {
             const savedTheme = localStorage.getItem('admin-theme');
@@ -637,6 +655,53 @@
                 setTimeout(() => alert.remove(), 500);
             });
         }, 5000);
+
+        // Global Search Functionality
+        document.getElementById('globalSearch').addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const usersView = document.getElementById('users-view');
+            const companyView = document.getElementById('company-view');
+            
+            let targetBodyId = null;
+            if (usersView.classList.contains('active')) {
+                targetBodyId = 'userTableBody';
+            } else if (companyView.classList.contains('active')) {
+                targetBodyId = 'companyTableBody';
+            }
+
+            if (targetBodyId) {
+                const rows = document.querySelectorAll(`#${targetBodyId} tr`);
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    row.style.display = text.includes(filter) ? '' : 'none';
+                });
+            } else {
+                // If in graph view, search might want to switch or filter something else
+                // Default to user search if someone just starts typing and it's not active
+                if (filter.length > 0) {
+                   switchView('users', document.getElementById('btn-users'));
+                   const rows = document.querySelectorAll(`#userTableBody tr`);
+                   rows.forEach(row => {
+                       const text = row.innerText.toLowerCase();
+                       row.style.display = text.includes(filter) ? '' : 'none';
+                   });
+                }
+            }
+        });
+
+        // Click "Active Today" card to filter users active today
+        function filterToday() {
+            const today = new Date().toISOString().split('T')[0];
+            const searchInput = document.getElementById('globalSearch');
+            
+            // Switch to users view first
+            switchView('users', document.getElementById('btn-users'));
+            
+            searchInput.value = today;
+            // Trigger the keyup event manually
+            const event = new Event('keyup');
+            searchInput.dispatchEvent(event);
+        }
     </script>
 
     <!-- Role Viewer Modal -->

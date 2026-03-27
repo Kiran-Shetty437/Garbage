@@ -194,7 +194,7 @@ def check_and_notify_user(user_id, conn=None):
         should_close = True
         
     user = conn.execute("SELECT * FROM user WHERE id = ?", (user_id,)).fetchone()
-    if not user or not user["email"] or not user["applied_job"]:
+    if not user or not user["email"] or not user["applied_job"] or not user["notifications_enabled"]:
         if should_close: conn.close()
         return
         
@@ -212,14 +212,25 @@ def check_and_notify_user(user_id, conn=None):
         if match_found:
             check = conn.execute("SELECT id FROM notifications WHERE user_id = ? AND company_id = ?", (user["id"], comp["id"])).fetchone()
             if not check:
-                if send_job_alert(user["email"], user["username"], comp["company_name"], comp["job_role"], comp["official_page_link"]):
-                    conn.execute("INSERT INTO notifications (user_id, company_id) VALUES (?, ?)", (user["id"], comp["id"]))
+                # Insert first to get the ID for tracking
+                cursor = conn.execute("INSERT INTO notifications (user_id, company_id, job_role, company_name) VALUES (?, ?, ?, ?)", 
+                                     (user["id"], comp["id"], comp["job_role"], comp["company_name"]))
+                notification_id = cursor.lastrowid
+                
+                if send_job_alert(user["email"], user["username"], comp["company_name"], comp["job_role"], comp["official_page_link"], notification_id):
                     conn.commit()
+                else:
+                    # If email failed, we should probably rollback or handle it
+                    pass
                     
     if should_close: conn.close()
 
 
 def sync_company_jobs(company_name, official_page_link, image_filename=None, conn=None):
+    # 1. Fetch jobs from API FIRST (No DB connection yet or at least no lock)
+    # This avoids holding a database lock during long network operations.
+    jobs = fetch_jobs(company_name, fetch_all=True)
+    
     from database import get_connection
     should_close = False
     if conn is None:
@@ -230,18 +241,50 @@ def sync_company_jobs(company_name, official_page_link, image_filename=None, con
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     
     try:
-        jobs = fetch_jobs(company_name, fetch_all=True)
+        # 2. Ensure a "base" row exists for this company to preserve metadata (link, image) 
+        # even if it currently has no active jobs in the API.
+        base_entry = conn.execute(
+            "SELECT id, image_filename FROM company WHERE company_name = ? AND job_role IS NULL", 
+            (company_name,)
+        ).fetchone()
+        
+        # Determine image filename to keep
+        if not image_filename and base_entry:
+            image_filename = base_entry["image_filename"]
+
+        if not base_entry:
+            conn.execute(
+                "INSERT INTO company (company_name, official_page_link, image_filename, job_role, last_sync) VALUES (?, ?, ?, ?, ?)",
+                (company_name, official_page_link, image_filename, None, now_str)
+            )
+        else:
+            conn.execute(
+                "UPDATE company SET official_page_link = ?, image_filename = ?, last_sync = ? WHERE id = ?",
+                (official_page_link, image_filename, now_str, base_entry["id"])
+            )
+
+        # 3. Process the fetched jobs
         api_job_roles = {job["role"] for job in jobs}
         
-        db_jobs = conn.execute("SELECT id, job_role FROM company WHERE company_name = ? AND job_role IS NOT NULL", (company_name,)).fetchall()
+        # 3. Remove jobs that are no longer in the API results
+        # We only delete rows with job_role IS NOT NULL
+        db_jobs = conn.execute(
+            "SELECT id, job_role FROM company WHERE company_name = ? AND job_role IS NOT NULL", 
+            (company_name,)
+        ).fetchall()
         
         for db_job in db_jobs:
             if db_job["job_role"] not in api_job_roles:
                 conn.execute("DELETE FROM notifications WHERE company_id = ?", (db_job["id"],))
                 conn.execute("DELETE FROM company WHERE id = ?", (db_job["id"],))
         
+        # 4. Insert or Update active jobs
         for job in jobs:
-            existing = conn.execute("SELECT id FROM company WHERE company_name = ? AND job_role = ?", (company_name, job["role"])).fetchone()
+            existing = conn.execute(
+                "SELECT id FROM company WHERE company_name = ? AND job_role = ?", 
+                (company_name, job["role"])
+            ).fetchone()
+            
             if not existing:
                 conn.execute(
                     "INSERT INTO company (company_name, official_page_link, image_filename, job_role, start_date, end_date, location, job_level, experience_required, apply_link, is_active, last_sync) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -254,7 +297,6 @@ def sync_company_jobs(company_name, official_page_link, image_filename=None, con
                     (job.get("level"), job.get("experience"), 1 if job.get("active") else 0, job.get("location"), job.get("link"), now_str, existing["id"])
                 )
         
-        conn.execute("UPDATE company SET last_sync = ? WHERE company_name = ?", (now_str, company_name))
         conn.commit()
     except Exception as e:
         print(f"Error syncing {company_name}: {e}")
@@ -279,7 +321,7 @@ def sync_all_companies():
     
     # Notifications section (can remain sequential or also be parallelized if mailing is the bottleneck)
     conn = get_connection()
-    users = conn.execute("SELECT id FROM user WHERE role = 'user' AND email IS NOT NULL AND applied_job IS NOT NULL").fetchall()
+    users = conn.execute("SELECT id FROM user WHERE role = 'user' AND email IS NOT NULL AND applied_job IS NOT NULL AND notifications_enabled = 1").fetchall()
     for u in users:
         check_and_notify_user(u["id"], conn)
     conn.close()

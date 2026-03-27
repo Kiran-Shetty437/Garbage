@@ -7,33 +7,626 @@
     <title>CareerConnect - User Portal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Custom Popup Alerts -->
     <link rel="stylesheet" href="{{ url_for('static', filename='alerts.css') }}">
+
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --bg-body: #f8fafc;
+            --bg-glass: rgba(255, 255, 255, 0.7);
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-glass: rgba(255, 255, 255, 0.4);
+            --border-color: #f1f5f9;
+            --nav-bg: rgba(255, 255, 255, 0.8);
+            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            --card-shadow-hover: 0 15px 40px -10px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --glass-blur: blur(12px);
+        }
+
+        body.dark-mode {
+            --bg-body: #0f172a;
+            --bg-glass: rgba(15, 23, 42, 0.8);
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --border-color: #334155;
+            --nav-bg: rgba(30, 41, 59, 0.8);
+            --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        body {
+            background: var(--bg-body);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            transition: background 0.3s ease, color 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            background: var(--nav-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            padding: 1rem 1.75rem;
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-glass);
+            position: sticky;
+            top: 1rem;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-box {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .logo-text {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .theme-toggle {
+            display: flex;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 14px;
+            padding: 4px;
+            gap: 4px;
+            border: 1px solid var(--border-glass);
+        }
+
+        body.dark-mode .theme-toggle {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-toggle {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-toggle.active {
+            background: var(--bg-card);
+            backdrop-filter: var(--glass-blur);
+            color: var(--text-main);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-glass);
+        }
+
+        /* Search Bar Styling */
+        .search-container {
+            flex-grow: 1;
+            max-width: 500px;
+            margin: 0 2rem;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.8rem 1rem 0.8rem 3.5rem !important; /* Increased padding and added important */
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            transition: var(--transition);
+            box-sizing: border-box; /* Ensure padding doesn't affect width calculations */
+        }
+
+        body.dark-mode .search-input {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--bg-card);
+            box-shadow: 0 8px 15px rgba(16, 185, 129, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .search-suggestions {
+            position: absolute;
+            top: calc(100% + 15px);
+            left: 0;
+            width: 100%;
+            background: var(--bg-card);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            border: 1px solid var(--border-glass);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1100;
+            padding: 8px 0;
+        }
+
+        .search-suggestions.active {
+            display: flex;
+        }
+
+        .suggestion-item {
+            padding: 0.9rem 1.25rem;
+            color: var(--text-main);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .suggestion-item i {
+            width: 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .suggestion-item:hover {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--primary);
+            padding-left: 1.5rem;
+        }
+
+        /* Responsive search adjust */
+        @media (max-width: 768px) {
+            .search-container {
+                display: none; /* Hide on small mobile to stay clean */
+            }
+        }
+
+        .profile-container { position: relative; }
+
+        .profile-trigger {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            cursor: pointer;
+            border: 3px solid var(--border-glass);
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+
+        .profile-trigger:hover {
+            transform: scale(1.08) rotate(5deg);
+            border-color: var(--primary);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            background: var(--bg-card);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-radius: 22px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            width: 280px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+            border: 1px solid var(--border-glass);
+            transform: translateY(10px);
+            transition: var(--transition);
+        }
+
+        .dropdown-menu.active { 
+            display: flex;
+            transform: translateY(0);
+        }
+
+        .dropdown-header {
+            padding: 1.75rem;
+            background: rgba(0, 0, 0, 0.02);
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .dropdown-header .username {
+            display: block;
+            font-weight: 800;
+            color: var(--text-main);
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        .dropdown-item {
+            padding: 1.25rem 1.75rem;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--primary);
+            padding-left: 2rem;
+        }
+
+        .dropdown-item.logout { color: #ef4444; border-top: 1px solid var(--border-glass); }
+
+        .welcome-box {
+            background: linear-gradient(135deg, rgba(6, 78, 59, 0.9) 0%, rgba(6, 95, 70, 0.8) 100%);
+            backdrop-filter: var(--glass-blur);
+            color: white;
+            padding: 3.5rem;
+            border-radius: 32px;
+            margin-bottom: 3.5rem;
+            box-shadow: 0 25px 50px -12px rgba(6, 78, 59, 0.4);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .welcome-box h1 {
+            font-size: 2.75rem;
+            margin: 0 0 0.75rem 0;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #fff;
+        }
+
+        .welcome-box p {
+            opacity: 0.9;
+            font-size: 1.2rem;
+            margin: 0;
+            font-weight: 500;
+            max-width: 600px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .company-grid-header {
+            margin-bottom: 2.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        .companies-wrapper {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .company-card {
+            background: var(--bg-card);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            border: 1px solid var(--border-glass);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .company-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--card-shadow-hover);
+            border-color: var(--primary);
+            background: var(--bg-glass);
+        }
+
+        .company-image-wrapper {
+            height: 200px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.03);
+            position: relative;
+        }
+
+        .company-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .company-card:hover .company-image-wrapper img { transform: scale(1.1); }
+
+        .company-details {
+            padding: 2.25rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .company-name {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin: 0 0 1.75rem 0;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-glass);
+            letter-spacing: -0.5px;
+        }
+
+        .jobs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            margin-bottom: 2.25rem;
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .job-item {
+            background: rgba(0, 0, 0, 0.02);
+            padding: 1.5rem;
+            border-radius: 18px;
+            border: 1px solid var(--border-glass);
+            transition: var(--transition);
+        }
+
+        body.dark-mode .job-item { background: rgba(255, 255, 255, 0.02); }
+
+        .job-item:hover {
+            border-color: var(--primary);
+            background: var(--bg-card);
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .job-link {
+            color: var(--text-main);
+            font-weight: 800;
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: color 0.2s;
+        }
+
+        .job-link:hover { color: var(--primary); }
+
+        .job-meta {
+            margin-top: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding-left: 1.75rem;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-level { background: rgba(79, 70, 229, 0.1); color: #6366f1; }
+        .badge-exp { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+
+        .btn-visit {
+            display: block;
+            width: 100%;
+            text-align: center;
+            padding: 1.1rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 18px;
+            font-weight: 800;
+            font-size: 1rem;
+            transition: var(--transition);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-visit:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(16, 185, 129, 0.3); filter: brightness(1.1); }
+
+        .empty-state {
+            background: var(--bg-card);
+            backdrop-filter: var(--glass-blur);
+            padding: 6rem 2rem;
+            border-radius: 32px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            color: var(--text-muted);
+            border: 1px solid var(--border-glass);
+        }
+
+        /* Widgets Area */
+        .chat-toggle-btn, .resume-toggle-btn {
+            position: fixed;
+            bottom: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: var(--transition);
+        }
+
+        .chat-toggle-btn { right: 2rem; background: var(--primary); }
+        .resume-toggle-btn { right: 7.5rem; background: #3b82f6; }
+
+        .chat-toggle-btn:hover, .resume-toggle-btn:hover { transform: scale(1.1) translateY(-5px); filter: brightness(1.1); }
+
+        .chat-window, .resume-window {
+            position: fixed;
+            bottom: 6.5rem;
+            right: 2rem;
+            width: 400px;
+            height: 600px;
+            background: var(--bg-card);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-radius: 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 2000;
+            border: 1px solid var(--border-glass);
+            transition: var(--transition);
+        }
+
+        .chat-window.active, .resume-window.active { display: flex; animation: slideUp 0.3s ease; }
+
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .chat-header, .resume-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-close-btn, .resume-close-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 10px; cursor: pointer; }
+
+        .chat-message-container, .resume-content-area {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .message { margin-bottom: 1rem; padding: 1rem; border-radius: 18px; max-width: 80%; font-size: 0.95rem; line-height: 1.5; }
+        .message.bot { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-glass); border-bottom-left-radius: 4px; }
+        .message.user { background: var(--primary); color: white; margin-left: auto; border-bottom-right-radius: 4px; }
+
+        .chat-input-area { padding: 1.25rem; background: var(--bg-card); display: flex; gap: 12px; border-top: 1px solid var(--border-glass); }
+        .chat-input-area input { flex-grow: 1; padding: 0.75rem 1.25rem; background: var(--bg-body); border: 1px solid var(--border-glass); border-radius: 12px; color: var(--text-main); font-family: inherit; }
+
+        .send-btn { background: var(--primary); border: none; color: white; padding: 0.75rem 1.25rem; border-radius: 12px; cursor: pointer; font-weight: 700; }
+
+        /* Resume Analyzer Specifics */
+        .upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3rem;
+            background: rgba(16, 185, 129, 0.05);
+            border: 2px dashed var(--primary);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .upload-label:hover { background: rgba(16, 185, 129, 0.1); }
+
+        .analyze-btn { width: 100%; margin-top: 1.5rem; padding: 1rem; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; }
+        .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .rb-widget { position: fixed; bottom: 2rem; right: 13rem; z-index: 1000; }
+        .rb-toggle-btn { width: 60px; height: 60px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; text-decoration: none; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3); transition: var(--transition); }
+        .rb-toggle-btn:hover { transform: scale(1.1) rotate(5deg); }
+    </style>
 </head>
 
 <body>
-    <div class="dashboard-container user-theme">
+    <div class="dashboard-container">
         <header class="top-nav">
-            <div class="logo" style="display: flex; align-items: center; gap: 10px;">
-                <div
-                    style="width: 35px; height: 35px; background: var(--primary-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 1.2rem;">
-                    C
-                </div>
-                <span style="font-size: 1.25rem; font-weight: 700; color: var(--text-color);">CareerConnect</span>
+            <div class="logo">
+                <div class="logo-box">C</div>
+                <span class="logo-text">CareerConnect</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <!-- Theme Toggle -->
-                <div class="theme-toggle"
-                    style="display: flex; background: rgba(0,0,0,0.05); border-radius: 10px; padding: 4px;">
-                    <button class="btn-toggle active" id="mode-light" onclick="setTheme('light')"
-                        style="padding: 6px 10px; border: none; background: var(--white); border-radius: 6px; cursor: pointer; color: var(--text-color); font-weight: 500; font-family: var(--font-body);">
-                        ☀️ Light
-                    </button>
-                    <button class="btn-toggle" id="mode-dark" onclick="setTheme('dark')"
-                        style="padding: 6px 10px; border: none; background: transparent; border-radius: 6px; cursor: pointer; color: #64748b; font-weight: 500; font-family: var(--font-body);">
-                        🌙 Dark
-                    </button>
+
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="globalSearch" class="search-input" placeholder="Search companies, job roles, locations...">
+                <div id="searchSuggestions" class="search-suggestions"></div>
+            </div>
+
+            <div class="nav-actions">
+                <div class="theme-toggle">
+                    <button class="btn-toggle active" id="mode-light" onclick="setTheme('light')">☀️ Light</button>
+                    <button class="btn-toggle" id="mode-dark" onclick="setTheme('dark')">🌙 Dark</button>
                 </div>
 
                 <div class="profile-container">
@@ -46,149 +639,73 @@
                             <span class="username">{{ username }}</span>
                             <span class="user-role">User Portal</span>
                         </div>
-
-                        <a href="{{ url_for('user.profile') }}" class="dropdown-item">
-                            <span>👤</span> Profile / Settings
-                        </a>
-                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout">
-                            <span>👋</span> Logout
-                        </a>
+                        <a href="{{ url_for('user.profile') }}" class="dropdown-item">👤 Profile / Settings</a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout">👋 Logout</a>
                     </div>
                 </div>
+            </div>
         </header>
 
         <main class="content">
             <div class="welcome-box">
                 <h1>Welcome, {{ username }}!</h1>
-                <p>Explore recommended companies and opportunities tailored for you.</p>
+                <p>Explore recommended companies and opportunities tailored for your career goals.</p>
             </div>
 
-            <div class="company-grid" style="margin-top: 2.5rem;">
-                <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                    🏢 Explore Companies
-                </h2>
+            <div class="company-grid">
+                <h2 class="company-grid-header">🏢 Explore Opportunities</h2>
 
                 {% if companies %}
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                <div class="companies-wrapper">
                     {% for company in companies %}
-                    <div class="company-card" style="
-                        background: var(--white); 
-                        border-radius: 1.25rem; 
-                        overflow: hidden; 
-                        box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
-                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                        border: 1px solid var(--border-color);
-                        position: relative;
-                        display: flex;
-                        flex-direction: column;
-                    ">
-                        <div class="company-image-container"
-                            style="height: 160px; overflow: hidden; position: relative; background: #f8fafc;">
+                    <div class="company-card">
+                        <div class="company-image-wrapper">
                             {% if company['image_filename'] %}
-                            <img src="{{ url_for('static', filename='uploads/' + company['image_filename']) }}"
-                                alt="{{ company['company_name'] }}"
-                                style="width: 100%; height: 100%; object-fit: cover;">
+                            <img src="{{ url_for('static', filename='uploads/' + company['image_filename']) }}" alt="{{ company['company_name'] }}">
                             {% else %}
-                            <div
-                                style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); color: #64748b;">
-                                <span style="font-size: 3rem;">🏢</span>
-                            </div>
+                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; font-size: 3rem; background: rgba(0,0,0,0.05);">🏢</div>
                             {% endif %}
-                            <div
-                                style="position: absolute; bottom: 0; left: 0; right: 0; height: 50%; background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);">
-                            </div>
                         </div>
 
-                        <div
-                            style="padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
-                            <div>
-                                <h3
-                                    style="margin: 0 0 1rem 0; font-size: 1.25rem; color: var(--text-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
-                                    {{ company['company_name'] }}
-                                </h3>
+                        <div class="company-details">
+                            <h3 class="company-name">{{ company['company_name'] }}</h3>
 
-                                <div class="jobs-container"
-                                    style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; max-height: 160px; overflow-y: auto; padding-right: 0.25rem;">
-                                    {% for job in company['jobs'] %}
-                                    <div class="job-scraped-info" style="
-                                        background: var(--bg-color); 
-                                        padding: 0.75rem; 
-                                        border-radius: 0.75rem; 
-                                        font-size: 0.85rem;
-                                        border: 1px solid var(--border-color);
-                                    ">
-                                        <div
-                                            style="margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
-                                            <span style="font-size: 1rem;">🎯</span>
-                                            <a href="{{ job['apply_link'] }}" target="_blank"
-                                                style="color: var(--text-color); font-weight: 700; text-decoration: none; transition: all 0.2s; cursor: pointer;"
-                                                onmouseover="this.style.color='var(--primary-color)'; this.style.textDecoration='underline';"
-                                                onmouseout="this.style.color='var(--text-color)'; this.style.textDecoration='none';">
-                                                {{ job['job_role'] }}
-                                            </a>
-                                        </div>
-                                        <div
-                                            style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-color); opacity: 0.65; font-size: 0.75rem; padding-left: 1.5rem; margin-top: 0.25rem;">
-                                            <span>📅 {{ job['start_date'] }} — {{ job['end_date'] }}</span>
-                                        </div>
-                                        <div
-                                            style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-color); opacity: 0.65; font-size: 0.75rem; padding-left: 1.5rem; margin-top: 0.25rem;">
-                                            <span>📍 {{ job['location'] }}</span>
-                                        </div>
-                                        <div
-                                            style="display: flex; gap: 0.4rem; margin-top: 0.5rem; padding-left: 1.5rem;">
-                                            <span
-                                                style="background: #eef2ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
-                                                {{ job['level'] }}
-                                            </span>
-                                            <span
-                                                style="background: #ecfdf5; color: #059669; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
-                                                Exp: {{ job['experience'] }}
-                                            </span>
-                                        </div>
+                            <div class="jobs-list">
+                                {% for job in company['jobs'] %}
+                                <div class="job-item">
+                                    <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px;">
+                                        <span style="font-size: 1.2rem;">🎯</span>
+                                        <a href="{{ job['apply_link'] }}" target="_blank" class="job-link">{{ job['job_role'] }}</a>
                                     </div>
-                                    {% endfor %}
+                                    <div class="job-meta">
+                                        <span>📅 {{ job['start_date'] }} — {{ job['end_date'] }}</span>
+                                        <span>📍 {{ job['location'] }}</span>
+                                    </div>
+                                    <div class="job-badges">
+                                        <span class="badge badge-level">{{ job['level'] }}</span>
+                                        <span class="badge badge-exp">Exp: {{ job['experience'] }}</span>
+                                    </div>
                                 </div>
+                                {% endfor %}
                             </div>
 
-                            <a href="{{ company['official_page_link'] }}" target="_blank" style="
-                                display: block; 
-                                width: 100%; 
-                                text-align: center; 
-                                padding: 0.8rem; 
-                                background: #10b981; 
-                                color: white; 
-                                text-decoration: none; 
-                                border-radius: 0.75rem; 
-                                font-weight: 600;
-                                transition: background 0.2s;
-                                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-                            " onmouseover="this.style.background='#059669'"
-                                onmouseout="this.style.background='#10b981'">
-                                Visit Website
-                            </a>
+                            <a href="{{ company['official_page_link'] }}" target="_blank" class="btn-visit">Visit Official Page</a>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
-                <div
-                    style="background: var(--white); padding: 3rem; border-radius: 1rem; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                    <p style="font-size: 1.1rem; color: var(--text-color); opacity: 0.8;">No companies available at the
-                        moment. Check back soon!
-                    </p>
+                <div class="empty-state">
+                    <p>No job opportunities found at the moment. Please check back later!</p>
                 </div>
                 {% endif %}
             </div>
-
-
-
         </main>
     </div>
 
     <!-- Chatbot Widget -->
     <div class="chatbot-widget">
-        <button class="chat-toggle-btn" id="chatToggle">
+        <button class="chat-toggle-btn" id="chatToggle" title="Open Job Assistant">
             <span>💬</span>
         </button>
 
@@ -197,27 +714,21 @@
                 <h4><span>🤖</span> Job Assistant</h4>
                 <button class="chat-close-btn" id="chatClose">✕</button>
             </div>
-
             <div class="chat-message-container" id="chatMessages">
                 <div class="message bot">
-                    Hello! I'm your job assistant. How can I help you with your career search today?
+                    Hello! I'm your AI job assistant. How can I help you today?
                 </div>
             </div>
-
             <div class="chat-input-area">
-                <input type="text" id="chatInput" placeholder="Type a message...">
-                <button class="send-btn" id="sendBtn">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
-                    </svg>
-                </button>
+                <input type="text" id="chatInput" placeholder="Write a message...">
+                <button class="send-btn" id="sendBtn">Send</button>
             </div>
         </div>
     </div>
 
-    <!-- Resume Analysis Widget -->
+    <!-- Resume Analyzer Widget -->
     <div class="resume-widget">
-        <button class="resume-toggle-btn" id="resumeToggle" title="Resume Analyzer">
+        <button class="resume-toggle-btn" id="resumeToggle" title="Analyze your Resume">
             <span>📄</span>
         </button>
 
@@ -226,28 +737,20 @@
                 <h4><span>📊</span> Resume Analyzer</h4>
                 <button class="resume-close-btn" id="resumeClose">✕</button>
             </div>
-
-            <div class="resume-content-area" id="resumeContent">
-                <div class="analysis-intro">
-                    <p>Upload your resume to get AI-powered insights, skill suggestions, and improvement tips.</p>
+            <div class="resume-content-area">
+                <div style="margin-bottom: 2rem;">
+                    <p style="color: var(--text-muted);">Get instant AI feedback on your resume matching.</p>
                 </div>
-
                 <div class="upload-section">
                     <label for="resumeUpload" class="upload-label">
-                        <div class="upload-icon">📁</div>
-                        <div class="upload-text">Click to upload PDF or Word</div>
+                        <span style="font-size: 2.5rem; margin-bottom: 1rem;">📁</span>
+                        <span style="font-weight: 700;">Click to upload PDF/DOCX</span>
                     </label>
                     <input type="file" id="resumeUpload" accept=".pdf,.docx" style="display: none;">
-                    <div id="fileName" class="file-name-display"></div>
+                    <div id="fileName" style="margin-top: 1rem; font-weight: 600; text-align: center;"></div>
                 </div>
-
-                <div class="action-section">
-                    <button class="analyze-btn" id="analyzeBtn" disabled>Analyze Resume</button>
-                </div>
-
-                <div class="result-section" id="analysisResult" style="display: none;">
-                    <!-- Results will be injected here -->
-                </div>
+                <button class="analyze-btn" id="analyzeBtn" disabled>Start AI Analysis</button>
+                <div id="analysisResult" style="margin-top: 1.5rem; display: none;"></div>
             </div>
         </div>
     </div>
@@ -259,264 +762,104 @@
         </a>
     </div>
 
-    <style>
-        /* Resume Builder Button */
-        .rb-widget {
-            position: fixed;
-            bottom: 2rem;
-            right: 12rem;
-            z-index: 1000;
-        }
-
-        .rb-toggle-btn {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-decoration: none;
-        }
-
-        .rb-toggle-btn:hover {
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 15px 30px rgba(16, 185, 129, 0.5);
-            color: white;
-        }
-    </style>
-
-
+    <!-- Scripts -->
     <script>
-        // Theme toggle logic
+        // Theme Management
         function setTheme(theme) {
             const body = document.body;
             const btnLight = document.getElementById('mode-light');
             const btnDark = document.getElementById('mode-dark');
-            const themeToggleContainer = document.querySelector('.theme-toggle');
 
             if (theme === 'dark') {
                 body.classList.add('dark-mode');
                 btnDark.classList.add('active');
-                btnDark.style.background = 'var(--white)';
-                btnDark.style.color = 'var(--text-color)';
                 btnLight.classList.remove('active');
-                btnLight.style.background = 'transparent';
-                btnLight.style.color = '#64748b';
-                if (themeToggleContainer) themeToggleContainer.style.background = 'rgba(255,255,255,0.1)';
             } else {
                 body.classList.remove('dark-mode');
                 btnLight.classList.add('active');
-                btnLight.style.background = 'var(--white)';
-                btnLight.style.color = 'var(--text-color)';
                 btnDark.classList.remove('active');
-                btnDark.style.background = 'transparent';
-                btnDark.style.color = '#64748b';
-                if (themeToggleContainer) themeToggleContainer.style.background = 'rgba(0,0,0,0.05)';
             }
-
-            // Persistence
             localStorage.setItem('user-theme', theme);
         }
 
-        // Initialize theme on load
-        document.addEventListener('DOMContentLoaded', function () {
-            const savedTheme = localStorage.getItem('user-theme');
-            if (savedTheme) {
-                setTheme(savedTheme);
-            }
-        });
-
+        // Initialize and Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
-            const profileTrigger = document.getElementById('profileTrigger');
-            const profileDropdown = document.getElementById('profileDropdown');
+            // Theme Init
+            const savedTheme = localStorage.getItem('user-theme') || 'light';
+            setTheme(savedTheme);
 
-            if (profileTrigger) {
-                profileTrigger.addEventListener('click', (e) => {
+            // Dropdown Logic
+            const trigger = document.getElementById('profileTrigger');
+            const dropdown = document.getElementById('profileDropdown');
+            if (trigger) {
+                trigger.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    profileDropdown.classList.toggle('active');
+                    dropdown.classList.toggle('active');
                 });
-
-                document.addEventListener('click', (e) => {
-                    if (!profileDropdown.contains(e.target) && !profileTrigger.contains(e.target)) {
-                        profileDropdown.classList.remove('active');
-                    }
-                });
+                document.addEventListener('click', () => dropdown.classList.remove('active'));
             }
 
+            // Widget Toggles
             const chatToggle = document.getElementById('chatToggle');
             const chatClose = document.getElementById('chatClose');
             const chatWindow = document.getElementById('chatWindow');
+            chatToggle.addEventListener('click', () => chatWindow.classList.toggle('active'));
+            chatClose.addEventListener('click', () => chatWindow.classList.remove('active'));
+
+            const resumeToggle = document.getElementById('resumeToggle');
+            const resumeClose = document.getElementById('resumeClose');
+            const resumeWindow = document.getElementById('resumeWindow');
+            resumeToggle.addEventListener('click', () => resumeWindow.classList.toggle('active'));
+            resumeClose.addEventListener('click', () => resumeWindow.classList.remove('active'));
+
+            // Chat Input Logic
             const chatInput = document.getElementById('chatInput');
             const sendBtn = document.getElementById('sendBtn');
             const chatMessages = document.getElementById('chatMessages');
 
-            // Toggle chat window
-            chatToggle.addEventListener('click', () => {
-                chatWindow.classList.add('active');
-                chatToggle.style.display = 'none';
-            });
+            function addMessage(text, sender) {
+                const div = document.createElement('div');
+                div.className = `message ${sender}`;
+                // Basic formatting for AI responses
+                div.innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                chatMessages.appendChild(div);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
 
-            chatClose.addEventListener('click', () => {
-                chatWindow.classList.remove('active');
-                chatToggle.style.display = 'flex';
-            });
-
-            // Send message function
             async function sendMessage() {
-                const message = chatInput.value.trim();
-                if (!message) return;
-
-                // Add user message to UI
-                addMessage(message, 'user');
+                const msg = chatInput.value.trim();
+                if (!msg) return;
+                
+                addMessage(msg, 'user');
                 chatInput.value = '';
-
-                // Add typing indicator
-                const typingId = addTypingIndicator();
 
                 try {
                     const response = await fetch('/chat', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ message: message })
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: msg })
                     });
-
                     const data = await response.json();
-
-                    // Remove typing indicator
-                    removeTypingIndicator(typingId);
-
-                    // Add bot response
                     addMessage(data.reply, 'bot');
                 } catch (error) {
                     console.error('Error:', error);
-                    removeTypingIndicator(typingId);
-                    addMessage('⚠️ **Unable to connect.** The server might be down or your connection was interrupted. Please check your internet and try again.', 'bot');
+                    addMessage('⚠️ Sorry, I encountered an error. Please try again.', 'bot');
                 }
             }
 
-            function formatMessage(text) {
-                if (!text) return '';
-
-                // Initial escape to prevent XSS (basic)
-                let formatted = text
-                    .replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;");
-
-                // Restore our intended tags after escaping
-                const restore = (str) => str.replace(/&lt;/g, "<").replace(/&gt;/g, ">");
-
-                // Handle headers (### Header)
-                formatted = formatted.replace(/^### (.*$)/gm, '#####$1#####');
-                formatted = formatted.replace(/^## (.*$)/gm, '####$1####');
-
-                // Handle bold text
-                formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-                // Handle horizontal rules (---)
-                formatted = formatted.replace(/^---$/gm, '<hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 1rem 0;">');
-
-                // Handle bullet points at start of line
-                formatted = formatted.replace(/^\s*[-*]\s+(.*)/gm, '<div class="bullet-point" style="display: flex; gap: 0.5rem; margin-bottom: 0.25rem;"><span style="color: #6366f1;">•</span><span>$1</span></div>');
-
-                // Handle bullets in middle of line
-                formatted = formatted.replace(/ \*\s+(.*?)/g, '<br><div class="bullet-point" style="display: flex; gap: 0.5rem; margin-bottom: 0.25rem;"><span style="color: #6366f1;">•</span><span>$1</span></div>');
-
-                // Handle symbols
-                formatted = formatted.replace(/📌/g, '<br><strong style="color: #10b981; font-size: 1.1rem;">📌</strong>');
-                formatted = formatted.replace(/⚠️/g, '<strong>⚠️</strong>');
-
-                // Handle line breaks
-                formatted = formatted.replace(/\n\n/g, '<br><br>');
-                formatted = formatted.replace(/\n/g, '<br>');
-
-                // Restore headers with proper tags
-                formatted = formatted.replace(/#####(.*?)#####/g, '<h5 style="margin: 1rem 0 0.5rem 0; color: #1e293b; font-weight: 700;">$1</h5>');
-                formatted = formatted.replace(/####(.*?)####/g, '<h4 style="margin: 1.2rem 0 0.6rem 0; color: #1e293b; font-weight: 800;">$1</h4>');
-
-                // Cleanup: remove <br> immediately following or preceding a block element
-                formatted = formatted.replace(/<br><div/g, '<div');
-                formatted = formatted.replace(/<\/div><br>/g, '</div>');
-                formatted = formatted.replace(/<\/h4><br>/g, '</h4>');
-                formatted = formatted.replace(/<\/h5><br>/g, '</h5>');
-
-                return formatted;
-            }
-
-            function addMessage(text, sender) {
-                const msgDiv = document.createElement('div');
-                msgDiv.className = `message ${sender}`;
-                msgDiv.innerHTML = formatMessage(text);
-                chatMessages.appendChild(msgDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            function addTypingIndicator() {
-                const id = 'typing-' + Date.now();
-                const typingDiv = document.createElement('div');
-                typingDiv.id = id;
-                typingDiv.className = 'message bot typing';
-                typingDiv.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
-                chatMessages.appendChild(typingDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-                return id;
-            }
-
-            function removeTypingIndicator(id) {
-                const element = document.getElementById(id);
-                if (element) element.remove();
-            }
-
-            // Event listeners
             sendBtn.addEventListener('click', sendMessage);
-            chatInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') sendMessage();
-            });
+            chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
 
-            // Card navigation
-            document.querySelectorAll('.card.interactive[data-url]').forEach(card => {
-                card.addEventListener('click', () => {
-                    const url = card.getAttribute('data-url');
-                    if (url) window.location.href = url;
-                });
-            });
-
-            // Resume Analyzer Logic
-            const resumeToggle = document.getElementById('resumeToggle');
-            const resumeClose = document.getElementById('resumeClose');
-            const resumeWindow = document.getElementById('resumeWindow');
+            // Resume Analysis Logic
             const resumeUpload = document.getElementById('resumeUpload');
-            const fileNameDisplay = document.getElementById('fileName');
             const analyzeBtn = document.getElementById('analyzeBtn');
+            const fileNameDisp = document.getElementById('fileName');
             const analysisResult = document.getElementById('analysisResult');
-            const resumeContent = document.getElementById('resumeContent');
-
-            resumeToggle.addEventListener('click', () => {
-                resumeWindow.classList.add('active');
-                resumeToggle.style.display = 'none';
-            });
-
-            resumeClose.addEventListener('click', () => {
-                resumeWindow.classList.remove('active');
-                resumeToggle.style.display = 'flex';
-            });
 
             resumeUpload.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    fileNameDisplay.textContent = `Selected: ${file.name}`;
+                if (e.target.files.length > 0) {
+                    fileNameDisp.textContent = `Selected: ${e.target.files[0].name}`;
                     analyzeBtn.disabled = false;
-                } else {
-                    fileNameDisplay.textContent = '';
-                    analyzeBtn.disabled = true;
                 }
             });
 
@@ -524,57 +867,153 @@
                 const file = resumeUpload.files[0];
                 if (!file) return;
 
+                analyzeBtn.disabled = true;
+                analyzeBtn.textContent = '⏳ Analyzing...';
+                analysisResult.style.display = 'none';
+
                 const formData = new FormData();
                 formData.append('resume', file);
-
-                // Show loading state
-                analyzeBtn.innerHTML = '<span class="loading-spinner"></span> Analyzing...';
-                analyzeBtn.disabled = true;
-                analysisResult.style.display = 'none';
 
                 try {
                     const response = await fetch('/analyze_resume', {
                         method: 'POST',
                         body: formData
                     });
-
                     const data = await response.json();
-
-                    if (response.ok) {
-                        analysisResult.style.display = 'block';
-                        // Use unified formatting function
-                        let formattedResult = formatMessage(data.result);
-
-                        analysisResult.innerHTML = `
-                            <div class="analysis-report" style="text-align: left; background: #fff; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0;">
-                                ${formattedResult}
-                            </div>
-                            <button class="reset-btn" id="resetBtn" style="margin-top: 1rem;">Analyze Another</button>
-                        `;
-
-                        document.getElementById('resetBtn').addEventListener('click', () => {
-                            analysisResult.style.display = 'none';
-                            resumeUpload.value = '';
-                            fileNameDisplay.textContent = '';
-                            analyzeBtn.disabled = true;
-                            analyzeBtn.textContent = 'Analyze Resume';
-                        });
-                    } else {
-                        alert(data.result || 'Error analyzing resume');
-                    }
+                    
+                    analysisResult.style.display = 'block';
+                    analysisResult.innerHTML = `
+                        <div style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-glass); margin-top: 1rem;">
+                            <h5 style="margin-top: 0; color: var(--primary);">Analysis Result:</h5>
+                            <div style="font-size: 0.9rem; line-height: 1.6;">${data.result.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div>
+                        </div>
+                    `;
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('An error occurred. Please try again.');
+                    alert('An error occurred during analysis.');
                 } finally {
-                    analyzeBtn.textContent = 'Analyze Resume';
                     analyzeBtn.disabled = false;
+                    analyzeBtn.textContent = 'Start AI Analysis';
                 }
             });
+
+            // Global Search Filter & Suggestions
+            const globalSearch = document.getElementById('globalSearch');
+            const suggestionsBox = document.getElementById('searchSuggestions');
+            
+            // Extract all unique searchable items on load
+            const getSearchItems = () => {
+                const items = [];
+                const seen = new Set();
+                
+                // Add unique company names
+                document.querySelectorAll('.company-name').forEach(name => {
+                    const text = name.textContent.trim();
+                    if (!seen.has(text.toLowerCase())) {
+                        seen.add(text.toLowerCase());
+                        items.push({ text: text, type: 'building' });
+                    }
+                });
+                
+                // Add unique job roles
+                document.querySelectorAll('.job-link').forEach(link => {
+                    const text = link.textContent.trim();
+                    if (!seen.has(text.toLowerCase())) {
+                        seen.add(text.toLowerCase());
+                        items.push({ text: text, type: 'briefcase' });
+                    }
+                });
+
+                return items;
+            };
+
+            const searchItems = getSearchItems();
+
+            window.selectSuggestion = function(text) {
+                globalSearch.value = text;
+                suggestionsBox.classList.remove('active');
+                // Trigger the filter logic by manual dispatch
+                globalSearch.dispatchEvent(new Event('input'));
+            }
+
+            if (globalSearch) {
+                globalSearch.addEventListener('input', function() {
+                    const filter = this.value.toLowerCase().trim();
+                    const cards = document.querySelectorAll('.company-card');
+                    const wrapper = document.querySelector('.companies-wrapper');
+                    let anyVisible = false;
+
+                    // 1. Filter logic
+                    cards.forEach(card => {
+                        const companyName = card.querySelector('.company-name').textContent.toLowerCase();
+                        const jobItems = card.querySelectorAll('.job-item');
+                        let companyVisible = false;
+
+                        const companyMatches = companyName.includes(filter);
+
+                        jobItems.forEach(item => {
+                            const jobText = item.textContent.toLowerCase();
+                            const matches = jobText.includes(filter) || companyMatches;
+                            item.style.display = matches ? 'block' : 'none';
+                            if (matches) companyVisible = true;
+                        });
+                        
+                        card.style.display = companyVisible ? 'flex' : 'none';
+                        if (companyVisible) anyVisible = true;
+                    });
+                    
+                    if (wrapper) {
+                        let emptyMsg = document.getElementById('searchEmptyMsg');
+                        if (!anyVisible && cards.length > 0) {
+                            wrapper.style.display = 'none';
+                            if (!emptyMsg) {
+                                emptyMsg = document.createElement('div');
+                                emptyMsg.id = 'searchEmptyMsg';
+                                emptyMsg.className = 'empty-state';
+                                emptyMsg.style.marginTop = '2rem';
+                                wrapper.after(emptyMsg);
+                            }
+                            emptyMsg.innerHTML = `<p>No matches found for "${this.value}"</p>`;
+                            emptyMsg.style.display = 'block';
+                        } else {
+                            wrapper.style.display = 'grid';
+                            if (emptyMsg) emptyMsg.style.display = 'none';
+                        }
+                    }
+
+                    // 2. Suggestions logic
+                    if (filter.length < 2) {
+                        suggestionsBox.classList.remove('active');
+                        return;
+                    }
+
+                    const filtered = searchItems.filter(item => 
+                        item.text.toLowerCase().includes(filter)
+                    ).slice(0, 6);
+
+                    if (filtered.length > 0) {
+                        suggestionsBox.innerHTML = filtered.map(item => `
+                            <div class="suggestion-item" onclick="selectSuggestion('${item.text.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-${item.type === 'building' ? 'building' : 'briefcase'}"></i>
+                                <span>${item.text}</span>
+                            </div>
+                        `).join('');
+                        suggestionsBox.classList.add('active');
+                    } else {
+                        suggestionsBox.classList.remove('active');
+                    }
+                });
+
+                // Hide suggestions when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.search-container')) {
+                        suggestionsBox.classList.remove('active');
+                    }
+                });
+            }
         });
     </script>
 
-    <!-- Custom Popup Alerts JS -->
     <script src="{{ url_for('static', filename='alerts.js') }}"></script>
 </body>
-
 </html>

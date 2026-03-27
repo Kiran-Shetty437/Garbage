@@ -33,6 +33,10 @@ def login():
                 (username, password)
             ).fetchone()
             if user:
+                # Update last activity
+                conn.execute("UPDATE user SET last_activity = CURRENT_TIMESTAMP WHERE id = ?", (user["id"],))
+                conn.commit()
+
                 session["user_id"] = user["id"]
                 session["username"] = user["username"]
                 session["role"] = "user"
@@ -142,6 +146,22 @@ def reset_password():
     else:
         flash("Invalid session.", "error")
         return redirect(url_for("auth.login"))
+
+
+@auth.route("/notification/view/<int:notification_id>")
+def view_notification(notification_id):
+    redirect_url = request.args.get("redirect", url_for("auth.login"))
+    
+    conn = get_connection()
+    try:
+        conn.execute("UPDATE notifications SET is_seen = 1 WHERE id = ?", (notification_id,))
+        conn.commit()
+    except Exception as e:
+        print(f"Error updating notification: {e}")
+    finally:
+        conn.close()
+        
+    return redirect(redirect_url)
 
 
 @auth.route("/logout")

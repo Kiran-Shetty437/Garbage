@@ -32,6 +32,38 @@ def settings():
         return redirect(url_for("auth.login"))
 
     if request.method == "POST":
+        action = request.form.get("action", "change_password")
+        
+        if action == "update_notifications":
+            enabled = 1 if request.form.get("notifications_enabled") == "on" else 0
+            conn = get_connection()
+            conn.execute("UPDATE user SET notifications_enabled=? WHERE id=?", (enabled, session["user_id"]))
+            conn.commit()
+            conn.close()
+            flash("Notification preferences updated!", "success")
+            return redirect(url_for("user.profile"))
+
+        if action == "update_roles":
+            applied_jobs = request.form.getlist("applied_job")
+            jobs_str = ", ".join([job.strip() for job in applied_jobs if job.strip()])
+            
+            if not jobs_str:
+                flash("You must have at least one target job role.", "error")
+                return redirect(url_for("user.profile"))
+                
+            conn = get_connection()
+            conn.execute("UPDATE user SET applied_job=? WHERE id=?", (jobs_str, session["user_id"]))
+            conn.commit()
+            conn.close()
+            
+            try:
+                check_and_notify_user(session["user_id"])
+            except Exception as e:
+                print(f"Notification error: {e}")
+                
+            flash("Target job roles updated successfully!", "success")
+            return redirect(url_for("user.profile"))
+
         current_password = request.form.get("current_password")
         new_password = request.form.get("new_password")
         confirm_password = request.form.get("confirm_password")
