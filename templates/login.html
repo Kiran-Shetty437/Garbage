@@ -55,6 +55,9 @@
                     <div class="input-group" id="password-group">
                         <label for="password">Password</label>
                         <input type="password" id="password" name="password" placeholder="Enter your password">
+                        <div id="password-requirements" style="font-size: 0.75rem; color: #6b7280; margin-top: 8px; line-height: 1.4; display: none;">
+                             Password must be 8-12 characters, include uppercase, lowercase, a number, and a special character.
+                        </div>
                         <div style="text-align: right; margin-top: 5px;" id="forgot-password-link">
                             <a href="javascript:void(0)" onclick="switchTab('forgot')"
                                 style="font-size: 0.85rem; color: #111827; text-decoration: none; opacity: 0.6;">Forgot
@@ -82,6 +85,9 @@
                     <div class="input-group">
                         <label for="new-password">New Password</label>
                         <input type="password" id="new-password" name="new_password" placeholder="Enter new password">
+                        <div style="font-size: 0.75rem; color: #6b7280; margin-top: 8px; line-height: 1.4;">
+                             Password must be 8-12 characters, include uppercase, lowercase, a number, and a special character.
+                        </div>
                     </div>
                 </div>
 
@@ -179,6 +185,8 @@
                 toggleAction.setAttribute('onclick', "switchTab('login'); return false;");
                 toggleAction.setAttribute('href', "{{ url_for('auth.login') }}");
 
+                document.getElementById('password-requirements').style.display = 'block';
+
                 usernameInput.required = true;
                 passwordInput.required = true;
                 emailInput.required = true;
@@ -241,6 +249,8 @@
                 toggleAction.setAttribute('onclick', "switchTab('signup'); return false;");
                 toggleAction.setAttribute('href', "{{ url_for('auth.signup') }}");
 
+                document.getElementById('password-requirements').style.display = 'none';
+
                 usernameInput.required = true;
                 passwordInput.required = true;
                 emailInput.required = false;
@@ -253,7 +263,52 @@
         document.addEventListener('DOMContentLoaded', () => {
             const state = "{{ state }}";
             if (state) switchTab(state);
+
+            // Add form validation logic
+            const authForm = document.getElementById('auth-form');
+            authForm.addEventListener('submit', function(e) {
+                const action = document.getElementById('form-action').value;
+                
+                // Only validate for signup and reset actions
+                if (action === 'signup' || action === 'reset') {
+                    let pw = '';
+                    if (action === 'signup') {
+                        pw = document.getElementById('password').value;
+                    } else if (action === 'reset') {
+                        pw = document.getElementById('new-password').value;
+                    }
+                    
+                    const validation = validatePassword(pw);
+                    if (!validation.valid) {
+                        e.preventDefault();
+                        if (window.showPopupAlert) {
+                            window.showPopupAlert(validation.message, 'error');
+                        } else {
+                            alert(validation.message);
+                        }
+                    }
+                }
+            });
         });
+
+        function validatePassword(password) {
+            if (password.length < 8 || password.length > 12) {
+                return { valid: false, message: "Password must be 8-12 characters long." };
+            }
+            if (!/[A-Z]/.test(password)) {
+                return { valid: false, message: "Password must contain at least one uppercase letter." };
+            }
+            if (!/[a-z]/.test(password)) {
+                return { valid: false, message: "Password must contain at least one lowercase letter." };
+            }
+            if (!/[0-9]/.test(password)) {
+                return { valid: false, message: "Password must contain at least one number." };
+            }
+            if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                return { valid: false, message: "Password must contain at least one special character." };
+            }
+            return { valid: true };
+        }
     </script>
 
     <!-- Custom Popup Alerts JS -->

@@ -457,6 +457,9 @@
                             <div class="setting-group">
                                 <label>New Password</label>
                                 <input type="password" name="new_password" class="setting-input" required placeholder="••••••••">
+                                <div style="font-size: 0.75rem; color: #6b7280; margin-top: 8px; line-height: 1.4;">
+                                     Password must be 8-12 characters, include uppercase, lowercase, a number, and a special character.
+                                </div>
                             </div>
                             <div class="setting-group">
                                 <label>Confirm New Password</label>
@@ -702,6 +705,51 @@
                 e.target.style.background = '#fee2e2';
             }
         });
+
+        // Password Validation Logic
+        const passwordForm = document.querySelector('#password-form-container form');
+        if (passwordForm) {
+            passwordForm.addEventListener('submit', function(e) {
+                const newPwd = this.querySelector('input[name="new_password"]').value;
+                const confirmPwd = this.querySelector('input[name="confirm_password"]').value;
+                
+                if (newPwd !== confirmPwd) {
+                    e.preventDefault();
+                    if (window.showPopupAlert) window.showPopupAlert("Passwords do not match.", "error");
+                    else alert("Passwords do not match.");
+                    return;
+                }
+                
+                const validation = validatePassword(newPwd);
+                if (!validation.valid) {
+                    e.preventDefault();
+                    if (window.showPopupAlert) {
+                        window.showPopupAlert(validation.message, 'error');
+                    } else {
+                        alert(validation.message);
+                    }
+                }
+            });
+        }
+
+        function validatePassword(password) {
+            if (password.length < 8 || password.length > 12) {
+                return { valid: false, message: "Password must be 8-12 characters long." };
+            }
+            if (!/[A-Z]/.test(password)) {
+                return { valid: false, message: "Password must contain at least one uppercase letter." };
+            }
+            if (!/[a-z]/.test(password)) {
+                return { valid: false, message: "Password must contain at least one lowercase letter." };
+            }
+            if (!/[0-9]/.test(password)) {
+                return { valid: false, message: "Password must contain at least one number." };
+            }
+            if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                return { valid: false, message: "Password must contain at least one special character." };
+            }
+            return { valid: true };
+        }
     });
 </script>
 {% endblock %}

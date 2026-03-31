@@ -100,6 +100,7 @@ def dashboard():
             "patterns": json.loads(r["patterns_json"]) if r["patterns_json"] else []
         })
         
+    templates = conn.execute("SELECT * FROM resume_templates").fetchall()
     conn.close()
     
     notification_report = session.pop('last_notification_report', None)
@@ -109,6 +110,7 @@ def dashboard():
                            users=users, 
                            companies=companies,
                            aptitude_patterns=aptitude_patterns,
+                           templates=templates,
                            commission_ratio=commission_ratio,
                            total_users=total_users,
                            active_today=active_today,
@@ -258,7 +260,7 @@ def toggle_template(template_id):
     conn.commit()
     conn.close()
     flash("Template status updated!", "success")
-    return redirect(url_for("admin.resume_templates"))
+    return redirect(url_for("admin.dashboard") + "?view=templates")
 
 @admin.route("/admin/delete-template/<int:template_id>", methods=["POST"])
 def delete_resume_template(template_id):
@@ -270,7 +272,7 @@ def delete_resume_template(template_id):
     conn.commit()
     conn.close()
     flash("Template deleted successfully!", "success")
-    return redirect(url_for("admin.resume_templates"))
+    return redirect(url_for("admin.dashboard") + "?view=templates")
 
 
 @admin.route("/admin/add-aptitude", methods=["POST"])

@@ -6,8 +6,23 @@ from services.chatbot_service import job_chatbot
 from routes.admin_routes import check_and_notify_user
 from services.resume_service import analyze_resume, extract_pdf_text, extract_docx_text
 from services.aptitude_service import generate_aptitude_questions
+import re
 
 user = Blueprint("user", __name__)
+
+def validate_password(password):
+    if not (8 <= len(password) <= 12):
+        return False, "Password must be between 8 and 12 characters."
+    if not re.search(r"[A-Z]", password):
+        return False, "Password must contain at least one capital letter."
+    if not re.search(r"[a-z]", password):
+        return False, "Password must contain at least one small letter."
+    if not re.search(r"\d", password):
+        return False, "Password must contain at least one number."
+    if not re.search(r"[@$!%*?&#]", password):
+        return False, "Password must contain at least one special character (@$!%*?&#)."
+    return True, ""
+
 
 
 @user.route("/profile")
@@ -72,6 +87,11 @@ def settings():
         if new_password != confirm_password:
             flash("New passwords do not match.", "error")
         else:
+            is_valid, msg = validate_password(new_password)
+            if not is_valid:
+                flash(msg, "error")
+                return redirect(url_for("user.profile"))
+                
             conn = get_connection()
             user_row = conn.execute("SELECT password FROM user WHERE id=?", (session["user_id"],)).fetchone()
 

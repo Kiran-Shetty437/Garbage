@@ -3,8 +3,23 @@ from database import get_connection
 import random
 import time
 from services.email_service import send_otp_email
+import re
 
 auth = Blueprint("auth", __name__)
+
+def validate_password(password):
+    if not (8 <= len(password) <= 12):
+        return False, "Password must be between 8 and 12 characters."
+    if not re.search(r"[A-Z]", password):
+        return False, "Password must contain at least one capital letter."
+    if not re.search(r"[a-z]", password):
+        return False, "Password must contain at least one small letter."
+    if not re.search(r"\d", password):
+        return False, "Password must contain at least one number."
+    if not re.search(r"[@$!%*?&#]", password):
+        return False, "Password must contain at least one special character (@$!%*?&#)."
+    return True, ""
+
 
 # Hardcoded admin credentials
 ADMIN_USERNAME = "admin"
@@ -66,6 +81,12 @@ def login():
                 return render_template("login.html", state="signup")
 
             try:
+                is_valid, msg = validate_password(password)
+                if not is_valid:
+                    conn.close()
+                    flash(msg, "error")
+                    return render_template("login.html", state="signup")
+
                 conn.execute(
                     "INSERT INTO user (username, password, role, email) VALUES (?, ?, ?, ?)",
                     (username, password, "user", email)
@@ -139,6 +160,11 @@ def reset_password():
         return render_template("login.html", state="reset")
 
     if email:
+        is_valid, msg = validate_password(new_password)
+        if not is_valid:
+            flash(msg, "error")
+            return render_template("login.html", state="reset")
+
         conn = get_connection()
         conn.execute("UPDATE user SET password=? WHERE email=?", (new_password, email))
         conn.commit()
