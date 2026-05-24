@@ -44,6 +44,14 @@
         line-height: 1.5;
     }
 
+    .hero-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+    }
+
     .feature-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -241,7 +249,7 @@
             <p class="hero-subtitle">An intelligence-driven ecosystem connecting ambitious talent with industry leaders.
                 Automated syncing, AI matching, and skill verification—all in one place.</p>
 
-            <div class="flex justify-center gap-6 mt-8">
+            <div class="hero-actions">
                 <a href="{{ url_for('auth.signup') }}" class="cc-btn cc-btn-primary animate-glare"
                     style="padding: 1.25rem 3rem; font-size: 1.15rem; border-radius: 20px; min-width: 200px;">
                     Join Now <i class="fas fa-arrow-right ml-2"></i>

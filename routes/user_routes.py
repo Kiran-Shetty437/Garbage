@@ -38,7 +38,10 @@ def dashboard():
 
     conn = get_connection()
     rows = conn.execute("SELECT * FROM company").fetchall()
+    user_row = conn.execute("SELECT profile_pic FROM user WHERE id=?", (session["user_id"],)).fetchone()
     conn.close()
+
+    profile_pic = user_row["profile_pic"] if user_row else None
 
     # Grouping logic
     companies_dict = {}
@@ -52,7 +55,7 @@ def dashboard():
                 "jobs": []
             }
         
-        if row["job_role"]:
+        if row["job_role"] and row["is_active"] == 1:
             companies_dict[name]["jobs"].append({
                 "job_role": row["job_role"],
                 "start_date": row["start_date"],
@@ -64,7 +67,7 @@ def dashboard():
                 "is_active": row["is_active"]
             })
     
-    return render_template("user/dashboard.html", companies=list(companies_dict.values()), user_id=session["user_id"], username=session.get("username"))
+    return render_template("user/dashboard.html", companies=list(companies_dict.values()), user_id=session["user_id"], username=session.get("username"), profile_pic=profile_pic)
 
 @user.route("/profile/update", methods=["POST"])
 def update_profile():
@@ -324,9 +327,13 @@ def aptitude():
     # Also get default patterns from questions if patterns table is empty
     if not patterns:
         patterns = conn.execute("SELECT DISTINCT company_name FROM aptitude_questions").fetchall()
+    user_row = conn.execute("SELECT username, profile_pic FROM user WHERE id=?", (session["user_id"],)).fetchone()
     conn.close()
+
+    username = user_row["username"] if user_row else session.get("username")
+    profile_pic = user_row["profile_pic"] if user_row else None
     
-    return render_template("user/aptitude_portal.html", patterns=patterns)
+    return render_template("user/aptitude_portal.html", patterns=patterns, username=username, profile_pic=profile_pic)
 
 
 @user.route("/aptitude/generate_json", methods=["POST"])

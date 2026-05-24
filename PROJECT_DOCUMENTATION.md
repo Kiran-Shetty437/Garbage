@@ -10,7 +10,7 @@
 - **Architecture**: Blueprint-based modular structure
 - **Database**: SQLite (Native `sqlite3` with row factory)
 - **Services**:
-  - **Job Synchronization**: Automated scraping and syncing of company job boards.
+  - **Job Synchronization**: Automated API-based fetching and syncing of company job boards.
   - **Email System**: Custom SMTP integration for job alerts and OTPs.
   - **Resume Parsing**: PDF and DOCX text extraction using `services/resume_service`.
   - **AI Integration**: Chatbot for career guidance and resume analysis.
@@ -48,7 +48,7 @@
 - Manages preferences (`notifications_enabled`) and profile assets (`profile_pic`, `resume_filename`).
 
 ### **Company Table**
-- Stores job roles crawled from company websites.
+- Stores job roles synchronized from company career boards via API.
 - Includes `job_role`, `start_date`, `end_date`, `location`, `job_level`, `experience_required`, and `apply_link`.
 
 ### **Resume Data Table**
@@ -85,5 +85,5 @@
 ## 7. Testing & Quality Assurance
 The platform undergoes systematic functional, security, and integration testing. A comprehensive testing suite including detailed steps, inputs, pre-conditions, and SQL database assertions has been compiled for QA review:
 - Refer to the dedicated [Test Case Specification Document (TEST_CASES.md)](file:///c:/D/CareerConnect/TEST_CASES.md) in the project root directory.
-- This includes verification protocols for all security modules (Password boundary checks, Admin 2FA Setup, OAuth linking), automated job crawlers, AI resume matching engine, aptitude evaluator, and real-time screen-time tracking analytics.
+- This includes verification protocols for all security modules (Password boundary checks, Admin 2FA Setup, OAuth linking), automated job API synchronizer, AI resume matching engine, aptitude evaluator, and real-time screen-time tracking analytics.
 
